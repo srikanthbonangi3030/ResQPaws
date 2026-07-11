@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Dashboard - resQpaws</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+  <nav class="navbar" id="main-nav-bar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <img src="assets/icons/icon-192.png" alt="Logo">
+        <span>resQ<span class="logo-accent">paws</span></span>
+      </a>
+      
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle Menu">☰</button>
+      
+      <div class="nav-links" id="nav-links-menu">
+        <a href="index.html" class="nav-link" data-i18n="navHome">Home</a>
+        <a href="about.html" class="nav-link" data-i18n="navAbout">About Us</a>
+        <a href="contact.html" class="nav-link" data-i18n="navContact">Contact Us</a>
+        
+        <div class="nav-actions">
+          <!-- Language Selector -->
+          <div class="lang-select-wrapper">
+            <select class="lang-select" id="lang-switcher-select">
+              <option value="en">English</option>
+              <option value="te">తెలుగు</option>
+              <option value="hi">हिन्दी</option>
+            </select>
+          </div>
+          
+          <!-- Theme Toggle -->
+          <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Theme"></button>
+          
+          <!-- Dynamic Auth Button -->
+          <a href="login.html" class="btn btn-primary btn-sm" id="nav-profile-link" data-i18n="navLogin">Login</a>
+          <a href="#" class="btn btn-outline btn-sm" id="nav-logout-btn" style="display: none;" data-i18n="navLogout">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Container -->
+  <main class="page-section container-wide" id="user-dash-container">
+    
+    <!-- Hidden fields to prevent JS from throwing errors for missing elements -->
+    <span id="stat-user-reports" style="display: none;">0</span>
+    <span id="stat-user-lostfound" style="display: none;">0</span>
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+      <h1>Welcome to ResQPaws – Helping Animals Together.</h1>
+      <p>Empowering citizens to report animal emergencies and coordinate shelters dynamically.</p>
+    </div>
+
+    <!-- Dashboard Statistics Row -->
+    <div class="stats-row-grid">
+      <div class="stat-card-md">
+        <div class="stat-card-md-icon">⏳</div>
+        <div class="stat-card-md-info">
+          <span class="stat-card-md-val" id="stat-user-active">0</span>
+          <span class="stat-card-md-label">Active Rescue Reports</span>
+        </div>
+      </div>
+      
+      <div class="stat-card-md">
+        <div class="stat-card-md-icon">💚</div>
+        <div class="stat-card-md-info">
+          <span class="stat-card-md-val" id="stat-user-rescued">0</span>
+          <span class="stat-card-md-label">Animals Rescued</span>
+        </div>
+      </div>
+      
+      <div class="stat-card-md">
+        <div class="stat-card-md-icon">🙋</div>
+        <div class="stat-card-md-info">
+          <span class="stat-card-md-val" id="stat-user-volunteers">320+</span>
+          <span class="stat-card-md-label">Registered Volunteers</span>
+        </div>
+      </div>
+      
+      <div class="stat-card-md">
+        <div class="stat-card-md-icon">🏢</div>
+        <div class="stat-card-md-info">
+          <span class="stat-card-md-val" id="stat-user-shelters">15</span>
+          <span class="stat-card-md-label">Nearby Shelters</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Hub Search Bar -->
+    <div class="dashboard-search-container">
+      <div class="search-bar-wrapper">
+        <svg class="search-icon-svg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input type="text" id="dashboard-search-bar" class="search-input-field" placeholder="Search reports, shelters, volunteers, adoptions..." aria-label="Search dashboard">
+      </div>
+    </div>
+
+    <!-- Feature Hub Grid -->
+    <div class="hub-feature-grid">
+      <!-- Card 1: Report Emergency (visually emphasized, larger, using green theme) -->
+      <a href="report.html" class="hub-card-md primary-rescue-card hub-card-large" aria-label="Report Emergency module">
+        <div class="hub-card-md-icon">🚨</div>
+        <h3 class="hub-card-md-title">Report Emergency</h3>
+        <p class="hub-card-md-desc">Found an injured or stranded animal? File a report immediately. Our system uses simulated AI scans to calculate injury severity and distress levels to notify nearby NGO shelters instantly.</p>
+      </a>
+
+      <!-- Card 2: Lost & Found -->
+      <a href="lost-found.html" class="hub-card-md lf-card" aria-label="Lost & Found module">
+        <div class="hub-card-md-icon">🔍</div>
+        <h3 class="hub-card-md-title">Lost & Found</h3>
+        <p class="hub-card-md-desc">Reunite lost pets with their owners. Post details of lost or found animals, search missing reports, and track status matchings.</p>
+      </a>
+
+      <!-- Card 3: Animal Adoption -->
+      <a href="adopt.html" class="hub-card-md adopt-card" aria-label="Animal Adoption module">
+        <div class="hub-card-md-icon">❤️</div>
+        <h3 class="hub-card-md-title">Animal Adoption</h3>
+        <p class="hub-card-md-desc">Open your home to a furry friend. View animals currently housed in shelters that are fully rehabilitated and ready for adoption.</p>
+      </a>
+
+      <!-- Card 4: Volunteer -->
+      <a href="volunteer.html" class="hub-card-md volunteer-card" aria-label="Become a Volunteer module">
+        <div class="hub-card-md-icon">🤝</div>
+        <h3 class="hub-card-md-title">Volunteer Network</h3>
+        <p class="hub-card-md-desc">Join our rescue network. Register as a local helper to assist shelters with transports, field rescues, or medical recovery support.</p>
+      </a>
+
+      <!-- Card 5: Nearby Shelters & Veterinary Clinics -->
+      <button type="button" class="hub-card-md shelter-card" id="card-btn-shelters" aria-label="View Nearby Shelters and Clinics">
+        <div class="hub-card-md-icon">📍</div>
+        <span class="hub-card-md-title">Nearby Shelters</span>
+        <span class="hub-card-md-desc">Find veterinary clinics and rescue centers. View availability, addresses, active rescue capabilities, and contact coordinates.</span>
+      </button>
+
+      <!-- Card 6: My Reports -->
+      <button type="button" class="hub-card-md reports-card" id="card-btn-myreports" aria-label="Scroll to Rescue Report History">
+        <div class="hub-card-md-icon">📄</div>
+        <span class="hub-card-md-title">My Reports</span>
+        <span class="hub-card-md-desc">View and track all cases reported by you. See real-time timeline logs from dispatch to veterinary treatment.</span>
+      </button>
+
+      <!-- Card 7: My Profile -->
+      <button type="button" class="hub-card-md profile-card-hub" id="card-btn-profile" aria-label="Open My Profile settings">
+        <div class="hub-card-md-icon">👤</div>
+        <span class="hub-card-md-title">My Profile</span>
+        <span class="hub-card-md-desc">View your registered personal details, contact details, account email, and account credentials.</span>
+      </button>
+
+      <!-- Card 8: Settings -->
+      <button type="button" class="hub-card-md settings-card" id="card-btn-settings" aria-label="Open settings dashboard">
+        <div class="hub-card-md-icon">⚙️</div>
+        <span class="hub-card-md-title">Settings</span>
+        <span class="hub-card-md-desc">Configure dashboard preferences, toggle Dark Theme mode, switch system translations, and check notifications preferences.</span>
+      </button>
+    </div>
+
+    <!-- History table and notifications split screen -->
+    <div id="reports-history-section" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; align-items: start; margin-top: 48px;">
+      
+      <!-- History Table -->
+      <div class="glass-card" style="padding: 24px 0; border-radius: 16px; border: 1px solid var(--border-card);">
+        <h3 style="margin-left:24px; margin-bottom: 20px;">Rescue Report History</h3>
+        
+        <div class="data-table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Tracking ID</th>
+                <th>Animal Type</th>
+                <th>Report Date</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Track Button</th>
+              </tr>
+            </thead>
+            <tbody id="user-history-table-body">
+              <!-- Filled dynamically by dashboard.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Notification center -->
+      <div class="glass-card" style="border-radius: 16px; border: 1px solid var(--border-card);">
+        <h3 style="margin-bottom: 20px;">Notification Center</h3>
+        <div id="user-notifications-list" style="max-height: 400px; overflow-y: auto;">
+          <!-- Filled dynamically by dashboard.js -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Overlays -->
+    
+    <!-- Nearby Shelters Modal -->
+    <div class="modal-overlay-container" id="modal-shelters">
+      <div class="modal-dialog-md">
+        <div class="modal-header-md">
+          <h3>📍 Nearby Shelters & Clinics</h3>
+          <button type="button" class="modal-close-btn-md" id="close-modal-shelters" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body-md">
+          <div class="shelter-list-container" id="modal-shelters-list">
+            <!-- Filled dynamically by dashboard.js -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Profile Modal -->
+    <div class="modal-overlay-container" id="modal-profile">
+      <div class="modal-dialog-md">
+        <div class="modal-header-md">
+          <h3>👤 My Profile</h3>
+          <button type="button" class="modal-close-btn-md" id="close-modal-profile" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body-md">
+          <div class="profile-modal-avatar-row">
+            <img id="modal-profile-avatar" class="profile-modal-avatar" src="assets/placeholder.png" alt="Avatar">
+            <div class="profile-modal-nameinfo">
+              <h4 id="modal-profile-name">Jane Doe</h4>
+              <span id="modal-profile-role">Public Reporter</span>
+            </div>
+          </div>
+          <div class="profile-details-grid">
+            <div class="profile-detail-field">
+              <span class="profile-detail-label">Email Address</span>
+              <span class="profile-detail-value" id="modal-profile-email">jane.doe@example.com</span>
+            </div>
+            <div class="profile-detail-field">
+              <span class="profile-detail-label">User ID</span>
+              <span class="profile-detail-value" id="modal-profile-uid" style="font-family: monospace; font-size: 0.85rem;">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay-container" id="modal-settings">
+      <div class="modal-dialog-md">
+        <div class="modal-header-md">
+          <h3>⚙️ Settings & Preferences</h3>
+          <button type="button" class="modal-close-btn-md" id="close-modal-settings" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body-md">
+          <div class="settings-option-item">
+            <div class="settings-option-info">
+              <span class="settings-option-title">Theme Mode</span>
+              <span class="settings-option-desc">Toggle between Light and Dark interface theme</span>
+            </div>
+            <div>
+              <button type="button" id="modal-theme-toggle-btn" class="btn btn-outline btn-sm">Toggle Theme</button>
+            </div>
+          </div>
+          
+          <div class="settings-option-item">
+             <div class="settings-option-info">
+               <span class="settings-option-title">Preferred Language</span>
+               <span class="settings-option-desc">Select translation language for site content</span>
+             </div>
+             <div>
+               <select class="lang-select" id="modal-lang-switcher-select" style="padding: 6px 12px; border-radius: 8px;">
+                 <option value="en">English</option>
+                 <option value="te">తెలుగు</option>
+                 <option value="hi">हिन्दी</option>
+               </select>
+             </div>
+          </div>
+          
+          <div class="settings-option-item">
+            <div class="settings-option-info">
+              <span class="settings-option-title">System Notifications</span>
+              <span class="settings-option-desc">Receive emergency alerts and status alerts</span>
+            </div>
+            <div>
+              <input type="checkbox" id="modal-notif-pref" checked style="width: 20px; height: 20px; accent-color: var(--primary);">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer Section -->
+  <footer class="footer" style="margin-top: 100px;">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <a href="index.html" class="logo">
+          <img src="assets/icons/icon-192.png" alt="Logo">
+          <span>resQ<span class="logo-accent">paws</span></span>
+        </a>
+        <p class="footer-text">Empowering citizens to report animal emergencies and coordinating shelters dynamically using AI-Assisted assessments.</p>
+      </div>
+      
+      <div>
+        <h4 class="footer-title">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="index.html" class="footer-link">Home</a></li>
+          <li><a href="about.html" class="footer-link">About Us</a></li>
+          <li><a href="contact.html" class="footer-link">Contact Us</a></li>
+          <li><a href="report.html" class="footer-link">Report Emergency</a></li>
+        </ul>
+      </div>
+      
+      <div>
+        <h4 class="footer-title">Rescue Modules</h4>
+        <ul class="footer-links">
+          <li><a href="lost-found.html" class="footer-link">Lost & Found</a></li>
+          <li><a href="volunteer.html" class="footer-link">Volunteer</a></li>
+          <li><a href="track.html" class="footer-link">Rescue Tracker</a></li>
+        </ul>
+      </div>
+      
+      <div>
+        <h4 class="footer-title">Contact Help</h4>
+        <ul class="footer-links" style="color: #94a3b8; font-size: 0.95rem;">
+          <li style="margin-bottom: 8px;">📍 Bangalore Main Center, MG Road</li>
+          <li style="margin-bottom: 8px;">📞 +91 98765 43210 (24/7 Helpline)</li>
+          <li style="margin-bottom: 8px;">✉️ emergency@resqpaws.org</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="footer-bottom">
+      <p data-i18n="footerCopy">© 2026 resQpaws Animal Welfare Foundation. All rights reserved.</p>
+      <div style="display: flex; gap: 20px;">
+        <a href="#" class="footer-link">Privacy Policy</a>
+        <a href="#" class="footer-link">Terms & Conditions</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  
+  <script src="data/sample-data.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/pages/dashboard.js"></script>
+</body>
+</html>

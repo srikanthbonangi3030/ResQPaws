@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donate – ResQPaws Animal Rescue</title>
+  <meta name="description" content="Support ResQPaws with a donation. Every rupee rescues, treats, shelters, and rehabilitates animals in need across India.">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#16A34A">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <style>
+    /* ─── DONATIONS PAGE EXCLUSIVE STYLES ─────────────────────────────────── */
+
+    /* Hero */
+    .donate-hero {
+      position: relative;
+      min-height: 92vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      background: var(--secondary);
+    }
+    .donate-hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('assets/images/donate-hero.jpg');
+      background-size: cover;
+      background-position: center 30%;
+      opacity: 0.35;
+      transition: opacity 0.5s;
+    }
+    .donate-hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg,
+        rgba(15,23,42,0.92) 0%,
+        rgba(22,163,74,0.25) 60%,
+        rgba(15,23,42,0.75) 100%);
+    }
+    .donate-hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 780px;
+      padding: 40px 24px;
+      animation: fadeSlideUp 0.9s ease both;
+    }
+    .donate-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(22,163,74,0.18);
+      border: 1px solid rgba(22,163,74,0.4);
+      color: #4ade80;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 18px;
+      border-radius: 9999px;
+      margin-bottom: 24px;
+      letter-spacing: 0.03em;
+    }
+    .donate-hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .donate-hero h1 span { color: #4ade80; }
+    .donate-hero-sub {
+      font-size: 1.15rem;
+      color: #94a3b8;
+      max-width: 580px;
+      margin-bottom: 36px;
+      line-height: 1.7;
+    }
+    .donate-hero-trust {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+      font-size: 0.88rem;
+      color: #94a3b8;
+    }
+    .donate-hero-avatars {
+      display: flex;
+    }
+    .donate-hero-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid #16A34A;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: -10px;
+      background: #1e293b;
+    }
+    .donate-hero-avatar:first-child { margin-left: 0; }
+
+    /* Floating card on hero */
+    .donate-hero-float {
+      position: absolute;
+      right: 6%;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 3;
+      width: 340px;
+      animation: fadeSlideLeft 1s ease 0.3s both;
+    }
+    @media (max-width: 900px) {
+      .donate-hero-float { display: none; }
+      .donate-hero-content { max-width: 100%; }
+    }
+
+    /* Donation Amount Cards */
+    .amount-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .amount-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border-card);
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+      user-select: none;
+    }
+    .amount-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(22,163,74,0.15);
+    }
+    .amount-card.selected {
+      border-color: var(--primary);
+      background: rgba(22,163,74,0.08);
+      box-shadow: 0 0 0 3px rgba(22,163,74,0.2);
+    }
+    .amount-card.selected .amount-tag {
+      color: var(--primary);
+    }
+    .amount-card .popular-badge {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .amount-emoji { font-size: 1.6rem; margin-bottom: 8px; }
+    .amount-tag { font-size: 1.5rem; font-weight: 800; font-family: var(--font-title); color: var(--text-main); }
+    .amount-label { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* Frequency Toggle */
+    .freq-toggle {
+      display: inline-flex;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 9999px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .freq-btn {
+      padding: 8px 20px;
+      border-radius: 9999px;
+      border: none;
+      font-family: var(--font-title);
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .freq-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(22,163,74,0.3);
+    }
+
+    /* Custom Amount Input */
+    .custom-amount-wrap {
+      position: relative;
+    }
+    .custom-amount-wrap .currency-symbol {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 1.1rem;
+      pointer-events: none;
+    }
+    .custom-amount-input {
+      width: 100%;
+      padding: 14px 16px 14px 36px;
+      border: 2px solid var(--input-border);
+      border-radius: 12px;
+      background: var(--input-bg);
+      color: var(--text-main);
+      font-size: 1.1rem;
+      font-weight: 600;
+      font-family: var(--font-title);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .custom-amount-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(22,163,74,0.15);
+    }
+
+    /* Payment Method Buttons */
+    .payment-methods {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+    }
+    .pay-method-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 10px;
+      border: 2px solid var(--border-card);
+      border-radius: 14px;
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      font-family: var(--font-title);
+    }
+    .pay-method-btn:hover, .pay-method-btn.selected {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(22,163,74,0.07);
+      transform: translateY(-2px);
+    }
+    .pay-method-icon { font-size: 1.6rem; }
+
+    /* Where it goes cards */
+    .impact-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: 20px;
+      padding: 28px 22px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .impact-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), #4ade80);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .impact-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(22,163,74,0.3);
+    }
+    .impact-card:hover::before { opacity: 1; }
+    .impact-icon {
+      font-size: 2.4rem;
+      margin-bottom: 14px;
+      display: block;
+    }
+    .impact-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-family: var(--font-title);
+    }
+    .impact-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Campaign Progress Cards */
+    .campaign-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .campaign-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+    }
+    .campaign-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    .campaign-body { padding: 22px; }
+    .campaign-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+    .campaign-desc { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.6; }
+    .campaign-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .campaign-raised { color: var(--primary); }
+    .campaign-target { color: var(--text-muted); }
+    .progress-bar-wrap {
+      width: 100%;
+      height: 8px;
+      background: var(--border-card);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #4ade80);
+      border-radius: 9999px;
+      transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .campaign-pct { font-size: 0.8rem; color: var(--text-muted); }
+    .campaign-pct strong { color: var(--primary); }
+
+    /* Transparency Feature Cards */
+    .trust-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: 18px;
+      padding: 24px;
+      transition: all 0.25s;
+    }
+    .trust-card:hover {
+      border-color: rgba(22,163,74,0.35);
+      box-shadow: 0 8px 24px rgba(22,163,74,0.1);
+    }
+    .trust-icon-wrap {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(22,163,74,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .trust-card h4 { font-size: 0.98rem; margin-bottom: 4px; }
+    .trust-card p { font-size: 0.83rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* FAQ Accordion */
+    .faq-item {
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .faq-item.open {
+      border-color: rgba(22,163,74,0.4);
+    }
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 18px 22px;
+      font-family: var(--font-title);
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      transition: background 0.2s;
+    }
+    .faq-question:hover { background: rgba(22,163,74,0.04); }
+    .faq-chevron {
+      flex-shrink: 0;
+      font-size: 1rem;
+      color: var(--primary);
+      transition: transform 0.3s ease;
+    }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.3s;
+      padding: 0 22px;
+    }
+    .faq-answer.open {
+      max-height: 300px;
+      padding: 0 22px 18px;
+    }
+    .faq-answer p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* Testimonials Slider */
+    .testimonial-slider {
+      overflow: hidden;
+      position: relative;
+    }
+    .testimonial-track {
+      display: flex;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .testimonial-slide {
+      min-width: 100%;
+      padding: 0 4px;
+    }
+    .testimonial-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: 20px;
+      padding: 32px;
+      position: relative;
+    }
+    .testimonial-quote {
+      font-size: 3rem;
+      color: var(--primary);
+      line-height: 1;
+      font-family: serif;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+    .testimonial-text {
+      font-size: 1.05rem;
+      color: var(--text-main);
+      font-style: italic;
+      line-height: 1.75;
+      margin-bottom: 24px;
+    }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .testimonial-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(22,163,74,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      border: 2px solid rgba(22,163,74,0.3);
+    }
+    .testimonial-name { font-weight: 700; font-size: 0.95rem; }
+    .testimonial-meta { font-size: 0.8rem; color: var(--text-muted); }
+    .testimonial-stars { color: #FBBF24; font-size: 0.9rem; margin-top: 2px; }
+    .slider-dots {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .slider-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border-card);
+      transition: all 0.3s;
+      cursor: pointer;
+      border: none;
+    }
+    .slider-dot.active {
+      width: 24px;
+      border-radius: 4px;
+      background: var(--primary);
+    }
+
+    /* Stats section */
+    .donate-stat-item {
+      text-align: center;
+      padding: 28px 20px;
+    }
+    .donate-stat-num {
+      font-size: 2.6rem;
+      font-weight: 800;
+      font-family: var(--font-title);
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .donate-stat-label {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Success Modal */
+    .donation-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      padding: 20px;
+    }
+    .donation-modal.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .donation-modal-box {
+      background: var(--bg-card-opaque);
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      border: 1px solid var(--border-glass);
+    }
+    .donation-modal.open .donation-modal-box { transform: scale(1); }
+    .modal-success-icon {
+      font-size: 3.5rem;
+      margin-bottom: 16px;
+      animation: bounceIn 0.6s ease;
+    }
+    .modal-close-btn {
+      margin-top: 20px;
+    }
+
+    /* Footer CTA Section */
+    .donate-footer-cta {
+      background: linear-gradient(135deg, #052e16 0%, #0F172A 50%, #052e16 100%);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      padding: 80px 24px;
+    }
+    .donate-footer-cta::before {
+      content: '🐾';
+      position: absolute;
+      font-size: 12rem;
+      opacity: 0.04;
+      top: -30px;
+      left: -40px;
+      pointer-events: none;
+    }
+    .donate-footer-cta::after {
+      content: '❤️';
+      position: absolute;
+      font-size: 10rem;
+      opacity: 0.04;
+      bottom: -20px;
+      right: -20px;
+      pointer-events: none;
+    }
+    .donate-footer-cta h2 {
+      color: #fff;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      margin-bottom: 16px;
+    }
+    .donate-footer-cta p {
+      color: #94a3b8;
+      max-width: 520px;
+      margin: 0 auto 32px;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    /* Animations */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeSlideLeft {
+      from { opacity: 0; transform: translate(30px, -50%); }
+      to   { opacity: 1; transform: translate(0, -50%); }
+    }
+    @keyframes bounceIn {
+      0%   { transform: scale(0.3); opacity: 0; }
+      60%  { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.4); }
+      50%       { box-shadow: 0 0 0 10px rgba(22,163,74,0); }
+    }
+    .pulse-donate { animation: pulse-green 2s infinite; }
+
+    /* Section headings */
+    .section-eyebrow {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--primary);
+      background: rgba(22,163,74,0.1);
+      padding: 4px 14px;
+      border-radius: 9999px;
+      margin-bottom: 14px;
+    }
+    .section-heading {
+      font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+      margin-bottom: 12px;
+    }
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 580px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* Sticky donate CTA on mobile */
+    .sticky-donate-bar {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--secondary);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 20px;
+      z-index: 500;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    @media (max-width: 768px) {
+      .sticky-donate-bar { display: flex; }
+    }
+    .sticky-donate-text { color: #fff; font-size: 0.88rem; font-weight: 600; }
+    .sticky-donate-text span { color: #4ade80; }
+
+    /* Responsive donate widget */
+    @media (max-width: 900px) {
+      #donate-widget > .container-wide > div,
+      #donate-widget > div > div {
+        grid-template-columns: 1fr !important;
+      }
+    }
+    .donate-widget-grid {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 48px;
+      align-items: start;
+    }
+    @media (max-width: 960px) {
+      .donate-widget-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar" id="main-nav-bar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <img src="assets/icons/icon-192.png" alt="Logo">
+        <span>resQ<span class="logo-accent">paws</span></span>
+      </a>
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle Menu">☰</button>
+      <div class="nav-links" id="nav-links-menu">
+        <a href="index.html" class="nav-link" data-i18n="navHome">Home</a>
+        <a href="about.html" class="nav-link" data-i18n="navAbout">About Us</a>
+        <a href="donate.html" class="nav-link active">Donate</a>
+        <a href="contact.html" class="nav-link" data-i18n="navContact">Contact Us</a>
+        <div class="nav-actions">
+          <div class="lang-select-wrapper">
+            <select class="lang-select" id="lang-switcher-select">
+              <option value="en">English</option>
+              <option value="te">తెలుగు</option>
+              <option value="hi">हिन्दी</option>
+            </select>
+          </div>
+          <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Theme"></button>
+          <a href="login.html" class="btn btn-primary btn-sm" id="nav-profile-link" data-i18n="navLogin">Login</a>
+          <a href="#" class="btn btn-outline btn-sm" id="nav-logout-btn" style="display:none;" data-i18n="navLogout">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- HERO SECTION                                                        -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="donate-hero" id="donate-hero">
+    <div class="donate-hero-bg"></div>
+    <div class="container-wide" style="position:relative; z-index:2; width:100%;">
+      <div class="donate-hero-content">
+        <div class="donate-hero-badge">❤️ Make a Difference Today</div>
+        <h1>Your Donation Can<br><span>Save a Life</span></h1>
+        <p class="donate-hero-sub">
+          Every rupee you give directly rescues injured animals, funds life-saving treatment, provides warm shelter, and gives broken lives a second chance.
+        </p>
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <a href="#donate-widget" class="btn btn-primary pulse-donate" style="padding: 14px 34px; font-size: 1rem;">
+            ❤️ Donate Now
+          </a>
+          <a href="#campaigns" class="btn btn-outline" style="padding:14px 28px; border-color:rgba(255,255,255,0.3); color:#fff;">
+            View Campaigns
+          </a>
+        </div>
+        <div class="donate-hero-trust">
+          <div class="donate-hero-avatars">
+            <div class="donate-hero-avatar">😊</div>
+            <div class="donate-hero-avatar">🧑</div>
+            <div class="donate-hero-avatar">👩</div>
+            <div class="donate-hero-avatar">🧒</div>
+          </div>
+          <span>Join <strong style="color:#4ade80;">1,000+</strong> animal lovers already making a difference</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating mini stats card -->
+    <div class="donate-hero-float">
+      <div class="glass-card no-lift" style="border-color:rgba(255,255,255,0.12); background:rgba(15,23,42,0.75);">
+        <p style="font-size:0.78rem; color:#94a3b8; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:18px;">Our Impact This Year</p>
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <span style="color:#94a3b8; font-size:0.9rem;">🐶 Animals Rescued</span>
+            <strong style="color:#4ade80;">1,042+</strong>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <span style="color:#94a3b8; font-size:0.9rem;">💉 Treatments Given</span>
+            <strong style="color:#4ade80;">3,280+</strong>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <span style="color:#94a3b8; font-size:0.9rem;">🏠 In Shelter</span>
+            <strong style="color:#4ade80;">540+</strong>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <span style="color:#94a3b8; font-size:0.9rem;">🤝 Volunteers</span>
+            <strong style="color:#4ade80;">320+</strong>
+          </div>
+        </div>
+        <div style="margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.08);">
+          <p style="font-size:0.78rem; color:#64748b; text-align:center;">🔒 100% Secure &amp; Transparent</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- DONATE WIDGET                                                       -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="page-section container-wide" id="donate-widget">
+    <div class="donate-widget-grid">
+
+      <!-- Left: Amount Selection -->
+      <div>
+        <div class="section-eyebrow">Choose Your Gift</div>
+        <h2 class="section-heading">Select Donation Amount</h2>
+        <p class="section-sub" style="margin:0 0 32px; text-align:left;">Every amount matters. Pick what feels right for you, or enter a custom amount.</p>
+
+        <!-- Frequency Toggle -->
+        <div style="margin-bottom:28px;">
+          <div class="freq-toggle">
+            <button class="freq-btn active" id="freq-onetime" onclick="setFrequency('onetime')">One-Time</button>
+            <button class="freq-btn" id="freq-monthly" onclick="setFrequency('monthly')">Monthly 🔄</button>
+          </div>
+          <p id="freq-note" style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;"></p>
+        </div>
+
+        <!-- Amount Cards -->
+        <div class="amount-grid" id="amount-grid">
+          <div class="amount-card" onclick="selectAmount(100, this)">
+            <div class="amount-emoji">🍲</div>
+            <div class="amount-tag">₹100</div>
+            <div class="amount-label">Feed a stray animal</div>
+          </div>
+          <div class="amount-card" onclick="selectAmount(250, this)">
+            <div class="amount-emoji">💊</div>
+            <div class="amount-tag">₹250</div>
+            <div class="amount-label">Medical treatment</div>
+          </div>
+          <div class="amount-card selected" onclick="selectAmount(500, this)">
+            <div class="popular-badge">⭐ Popular</div>
+            <div class="amount-emoji">🚑</div>
+            <div class="amount-tag">₹500</div>
+            <div class="amount-label">Emergency rescue</div>
+          </div>
+          <div class="amount-card" onclick="selectAmount(1000, this)">
+            <div class="amount-emoji">🏠</div>
+            <div class="amount-tag">₹1,000</div>
+            <div class="amount-label">Shelter &amp; rehab</div>
+          </div>
+        </div>
+
+        <!-- Custom Amount -->
+        <div style="margin-bottom:28px;">
+          <label style="font-size:0.88rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:8px;">Or enter custom amount:</label>
+          <div class="custom-amount-wrap">
+            <span class="currency-symbol">₹</span>
+            <input type="number" class="custom-amount-input" id="custom-amount-input"
+              placeholder="Enter any amount..." min="10"
+              oninput="handleCustomAmount(this.value)">
+          </div>
+        </div>
+
+        <!-- Selected Summary -->
+        <div id="donation-summary" class="glass-card no-lift" style="border-color:rgba(22,163,74,0.3); background:rgba(22,163,74,0.04); display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:2px;" id="summary-freq-label">One-Time Donation</p>
+              <p style="font-size:1.5rem; font-weight:800; font-family:var(--font-title); color:var(--primary);" id="summary-amount">₹500</p>
+            </div>
+            <div style="text-align:right; font-size:0.82rem; color:var(--text-muted);">
+              <p>🔒 Secure Payment</p>
+              <p>📧 Receipt via Email</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Payment Panel -->
+      <div>
+        <div class="glass-card no-lift" style="position:sticky; top:90px;">
+          <h3 style="margin-bottom:6px; font-size:1.2rem;">Complete Your Donation</h3>
+          <p style="font-size:0.83rem; color:var(--text-muted); margin-bottom:24px;">Choose a payment method and donate securely.</p>
+
+          <!-- Donor Info -->
+          <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+            <input type="text" class="form-control" id="donor-name" placeholder="Your Full Name" style="border-radius:10px;">
+            <input type="email" class="form-control" id="donor-email" placeholder="Email for receipt">
+            <div style="display:flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--text-muted);">
+              <input type="checkbox" id="anon-check" style="width:auto; margin:0; accent-color:var(--primary);">
+              <label for="anon-check">Donate anonymously</label>
+            </div>
+          </div>
+
+          <!-- Payment Methods -->
+          <p style="font-size:0.82rem; font-weight:600; color:var(--text-muted); margin-bottom:10px;">Select Payment Method:</p>
+          <div class="payment-methods" style="margin-bottom:20px;">
+            <button class="pay-method-btn selected" onclick="selectPayMethod(this)">
+              <span class="pay-method-icon">📱</span>UPI
+            </button>
+            <button class="pay-method-btn" onclick="selectPayMethod(this)">
+              <span class="pay-method-icon">🟡</span>Google Pay
+            </button>
+            <button class="pay-method-btn" onclick="selectPayMethod(this)">
+              <span class="pay-method-icon">🟣</span>PhonePe
+            </button>
+            <button class="pay-method-btn" onclick="selectPayMethod(this)">
+              <span class="pay-method-icon">🔵</span>Paytm
+            </button>
+            <button class="pay-method-btn" onclick="selectPayMethod(this)">
+              <span class="pay-method-icon">💳</span>Card
+            </button>
+            <button class="pay-method-btn" onclick="selectPayMethod(this)">
+              <span class="pay-method-icon">🏦</span>Net Banking
+            </button>
+          </div>
+
+          <!-- UPI ID field (shown for UPI/GPay/PhonePe/Paytm) -->
+          <div id="upi-field" style="margin-bottom:20px;">
+            <label style="font-size:0.82rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:6px;">UPI ID / QR Code</label>
+            <input type="text" class="form-control" placeholder="yourname@upi" style="border-radius:10px;">
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:6px;">📌 Payments go to: <strong style="color:var(--primary);">resqpaws@upi</strong></p>
+          </div>
+
+          <!-- Amount Display -->
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; background:rgba(22,163,74,0.06); border:1px solid rgba(22,163,74,0.2); border-radius:12px; margin-bottom:20px;">
+            <span style="font-size:0.88rem; color:var(--text-muted);">Amount to Pay</span>
+            <span style="font-size:1.4rem; font-weight:800; font-family:var(--font-title); color:var(--primary);" id="pay-amount-display">₹500</span>
+          </div>
+
+          <!-- Donate Button -->
+          <button class="btn btn-primary" style="width:100%; padding:16px; font-size:1rem;" onclick="processDonation()" id="donate-btn">
+            ❤️ Donate Now
+          </button>
+
+          <p style="text-align:center; font-size:0.75rem; color:var(--text-muted); margin-top:12px;">
+            🔒 256-bit SSL encrypted &nbsp;|&nbsp; 🧾 Instant receipt &nbsp;|&nbsp; No hidden charges
+          </p>
+
+          <!-- Razorpay integration note -->
+          <p style="text-align:center; font-size:0.72rem; color:var(--text-muted); margin-top:8px; opacity:0.7;">
+            <!-- TODO: Integrate Razorpay SDK — replace processDonation() with Razorpay order creation -->
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- WHERE YOUR DONATION GOES                                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="page-section" style="background:rgba(var(--primary-rgb),0.03);">
+    <div class="container-wide">
+      <div style="text-align:center; margin-bottom:48px;">
+        <div class="section-eyebrow">Full Transparency</div>
+        <h2 class="section-heading">Where Your Donation Goes</h2>
+        <p class="section-sub">Every rupee is accounted for. Here is exactly how we use your generous support.</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(185px, 1fr)); gap:20px;">
+        <div class="impact-card">
+          <span class="impact-icon">🐶</span>
+          <h4 class="impact-title">Food &amp; Nutrition</h4>
+          <p class="impact-desc">Daily meals for rescued animals in shelters. Specialized nutrition for recovering pets.</p>
+        </div>
+        <div class="impact-card">
+          <span class="impact-icon">🏥</span>
+          <h4 class="impact-title">Medical Care</h4>
+          <p class="impact-desc">Surgeries, wound treatment, and long-term medication for critically injured animals.</p>
+        </div>
+        <div class="impact-card">
+          <span class="impact-icon">🚑</span>
+          <h4 class="impact-title">Rescue Operations</h4>
+          <p class="impact-desc">Fuel, equipment, and team costs for emergency rescue missions across the city.</p>
+        </div>
+        <div class="impact-card">
+          <span class="impact-icon">🏠</span>
+          <h4 class="impact-title">Shelter &amp; Care</h4>
+          <p class="impact-desc">Infrastructure, bedding, heating, and staff salaries at our care centers.</p>
+        </div>
+        <div class="impact-card">
+          <span class="impact-icon">💉</span>
+          <h4 class="impact-title">Vaccinations</h4>
+          <p class="impact-desc">Preventive vaccinations against rabies, parvovirus, and other life-threatening diseases.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- IMPACT STATISTICS                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="page-section container-wide">
+    <div style="text-align:center; margin-bottom:48px;">
+      <div class="section-eyebrow">Our Numbers</div>
+      <h2 class="section-heading">Impact by the Numbers</h2>
+      <p class="section-sub">Powered by generous donors like you, our results speak for themselves.</p>
+    </div>
+
+    <div class="stats-bar" id="donate-stats-bar" style="grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));">
+      <div class="donate-stat-item">
+        <div class="donate-stat-num counter-value" data-target="1042" data-suffix="+">0</div>
+        <div class="donate-stat-label">🐾 Animals Rescued</div>
+      </div>
+      <div class="donate-stat-item">
+        <div class="donate-stat-num counter-value" data-target="3280" data-suffix="+">0</div>
+        <div class="donate-stat-label">🏥 Treatments Given</div>
+      </div>
+      <div class="donate-stat-item">
+        <div class="donate-stat-num counter-value" data-target="540" data-suffix="+">0</div>
+        <div class="donate-stat-label">🏠 In Shelter</div>
+      </div>
+      <div class="donate-stat-item">
+        <div class="donate-stat-num counter-value" data-target="320" data-suffix="+">0</div>
+        <div class="donate-stat-label">🤝 Active Volunteers</div>
+      </div>
+      <div class="donate-stat-item">
+        <div class="donate-stat-num counter-value" data-target="1208" data-suffix="+">0</div>
+        <div class="donate-stat-label">❤️ Generous Donors</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- ONGOING CAMPAIGNS                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="page-section" style="background:rgba(var(--primary-rgb),0.03);" id="campaigns">
+    <div class="container-wide">
+      <div style="text-align:center; margin-bottom:48px;">
+        <div class="section-eyebrow">Live Campaigns</div>
+        <h2 class="section-heading">Ongoing Fundraisers</h2>
+        <p class="section-sub">These campaigns need your support right now. Every donation counts.</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:28px;">
+
+        <div class="campaign-card">
+          <img src="assets/placeholder.png" alt="Animal Shelter" class="campaign-img"
+            style="background:linear-gradient(135deg,#052e16,#065f46);">
+          <div class="campaign-body">
+            <span class="badge badge-low" style="margin-bottom:10px;">🏗️ Infrastructure</span>
+            <h3 class="campaign-title">Build a New Animal Shelter</h3>
+            <p class="campaign-desc">Help us construct a modern 100-bed shelter with medical bays, play areas, and quarantine rooms.</p>
+            <div class="campaign-meta">
+              <span class="campaign-raised">₹3,42,000 raised</span>
+              <span class="campaign-target">of ₹5,00,000</span>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" style="width:0" data-width="68"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <p class="campaign-pct"><strong>68%</strong> funded</p>
+              <button class="btn btn-primary btn-sm" onclick="quickDonate('Shelter Campaign')">Support This →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="campaign-card">
+          <img src="assets/placeholder.png" alt="Emergency Medical" class="campaign-img"
+            style="background:linear-gradient(135deg,#7f1d1d,#1d1d3d);">
+          <div class="campaign-body">
+            <span class="badge badge-critical" style="margin-bottom:10px;">🚨 Urgent</span>
+            <h3 class="campaign-title">Emergency Medical Fund</h3>
+            <p class="campaign-desc">Critical surgeries, ICU care, and specialist consultations for severely injured animals.</p>
+            <div class="campaign-meta">
+              <span class="campaign-raised">₹1,87,500 raised</span>
+              <span class="campaign-target">of ₹2,50,000</span>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" style="width:0" data-width="75"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <p class="campaign-pct"><strong>75%</strong> funded</p>
+              <button class="btn btn-primary btn-sm" onclick="quickDonate('Medical Fund')">Support This →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="campaign-card">
+          <img src="assets/placeholder.png" alt="Rescue Vehicle" class="campaign-img"
+            style="background:linear-gradient(135deg,#1e3a5f,#0f172a);">
+          <div class="campaign-body">
+            <span class="badge badge-high" style="margin-bottom:10px;">🚐 Equipment</span>
+            <h3 class="campaign-title">Rescue Vehicle Campaign</h3>
+            <p class="campaign-desc">Purchase a dedicated rescue van equipped with oxygen, stretchers, and medical supplies.</p>
+            <div class="campaign-meta">
+              <span class="campaign-raised">₹72,000 raised</span>
+              <span class="campaign-target">of ₹3,00,000</span>
+            </div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" style="width:0" data-width="24"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <p class="campaign-pct"><strong>24%</strong> funded</p>
+              <button class="btn btn-primary btn-sm" onclick="quickDonate('Vehicle Campaign')">Support This →</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TRANSPARENCY                                                        -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="page-section container-wide">
+    <div style="text-align:center; margin-bottom:48px;">
+      <div class="section-eyebrow">Why Trust Us</div>
+      <h2 class="section-heading">Your Trust is Everything</h2>
+      <p class="section-sub">We hold ourselves to the highest standards of accountability and transparency.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:20px;">
+      <div class="trust-card">
+        <div class="trust-icon-wrap">✅</div>
+        <div>
+          <h4>100% Secure Donations</h4>
+          <p>All transactions are protected with 256-bit SSL encryption. Your payment data is never stored by us.</p>
+        </div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon-wrap">📊</div>
+        <div>
+          <h4>Full Transparency</h4>
+          <p>Annual impact reports, monthly fund statements, and real-time campaign tracking — always publicly available.</p>
+        </div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon-wrap">🧾</div>
+        <div>
+          <h4>Instant Receipts</h4>
+          <p>Receive a donation receipt within minutes at your registered email. Valid for 80G tax exemption.</p>
+        </div>
+      </div>
+      <div class="trust-card">
+        <div class="trust-icon-wrap">❤️</div>
+        <div>
+          <h4>Every Rupee Helps</h4>
+          <p>Zero overhead on small donations. Even ₹50 goes directly towards an animal's food or medicine.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- FAQ SECTION                                                         -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="page-section" style="background:rgba(var(--primary-rgb),0.03);">
+    <div class="container-wide" style="max-width:780px;">
+      <div style="text-align:center; margin-bottom:48px;">
+        <div class="section-eyebrow">Got Questions?</div>
+        <h2 class="section-heading">Frequently Asked Questions</h2>
+      </div>
+
+      <div id="faq-container">
+        <div class="faq-item open">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Is my donation 100% secure?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer open">
+            <p>Absolutely. All donations are processed through bank-grade 256-bit SSL encrypted channels. We partner with certified payment gateways (Razorpay-ready) and never store your card or UPI details on our servers.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Can I donate monthly?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <p>Yes! Select "Monthly 🔄" in the donation widget and your chosen amount will be auto-debited each month. You can cancel anytime from your email confirmation link — no questions asked.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Will I receive a tax receipt?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <p>Yes. We are an 80G-registered NGO. You will receive an official donation receipt via email immediately after your donation. This receipt is valid for income tax deduction under Section 80G of the IT Act.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            How exactly are donations used?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <p>100% of your donation goes to animal welfare activities — food, medical care, rescue operations, shelter maintenance, and vaccinations. We publish quarterly impact reports on our website that detail every rupee spent.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Can I donate anonymously?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <p>Yes. Check the "Donate anonymously" checkbox in the payment panel. Your name will not appear on any public donor lists. You will still receive a private email receipt for tax purposes.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            Can I donate for a specific animal or campaign?
+            <span class="faq-chevron">▼</span>
+          </button>
+          <div class="faq-answer">
+            <p>Yes! Use the "Support This →" button on any active campaign card to dedicate your donation to that specific cause. You can also contact us directly to sponsor a specific animal's care.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TESTIMONIALS                                                        -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="page-section container-wide">
+    <div style="text-align:center; margin-bottom:48px;">
+      <div class="section-eyebrow">Real Stories</div>
+      <h2 class="section-heading">What Our Donors Say</h2>
+      <p class="section-sub">Hear from the people who have made a difference — and the animals whose lives they changed.</p>
+    </div>
+
+    <div class="testimonial-slider" id="testimonial-slider">
+      <div class="testimonial-track" id="testimonial-track">
+
+        <div class="testimonial-slide">
+          <div class="testimonial-card">
+            <div class="testimonial-quote">"</div>
+            <p class="testimonial-text">I donated ₹500 and within a week I got an update with photos of a rescued puppy who was treated thanks to my contribution. It felt like I was truly part of the rescue. ResQPaws is doing incredible work.</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">👩</div>
+              <div>
+                <div class="testimonial-name">Priya Sharma</div>
+                <div class="testimonial-meta">Monthly donor since 2024 · Bangalore</div>
+                <div class="testimonial-stars">★★★★★</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-slide">
+          <div class="testimonial-card">
+            <div class="testimonial-quote">"</div>
+            <p class="testimonial-text">My ₹1,000 donation went towards the emergency medical fund. I got a detailed receipt instantly and even a certificate of appreciation. The transparency here is unlike any other NGO I've supported.</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">🧑</div>
+              <div>
+                <div class="testimonial-name">Karthik Reddy</div>
+                <div class="testimonial-meta">One-time donor · Hyderabad</div>
+                <div class="testimonial-stars">★★★★★</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-slide">
+          <div class="testimonial-card">
+            <div class="testimonial-quote">"</div>
+            <p class="testimonial-text">We set up a ₹250/month auto-donation as a team at our office. We get monthly impact updates and it truly motivates the team. It's one of the best team-building activities we've ever done.</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">😊</div>
+              <div>
+                <div class="testimonial-name">Ananya & Team</div>
+                <div class="testimonial-meta">Corporate monthly donors · Chennai</div>
+                <div class="testimonial-stars">★★★★★</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-slide">
+          <div class="testimonial-card">
+            <div class="testimonial-quote">"</div>
+            <p class="testimonial-text">A stray dog named "Rocky" was rescued using the ResQPaws app near our colony. Hearing that donations helped fund his surgery and that he was adopted made me cry with joy. I donate every month now.</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">🧒</div>
+              <div>
+                <div class="testimonial-name">Ramesh Naidu</div>
+                <div class="testimonial-meta">Monthly donor · Mysore</div>
+                <div class="testimonial-stars">★★★★★</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Dots -->
+    <div class="slider-dots" id="slider-dots"></div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- FOOTER CTA                                                          -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <section class="donate-footer-cta">
+    <div class="container-wide">
+      <p style="font-size:2.5rem; margin-bottom:12px;">🐾</p>
+      <h2>Become a Hero for Animals Today</h2>
+      <p>
+        Animals can't speak for themselves — but you can act for them. Whether it's ₹100 or ₹10,000, your generosity changes lives. Join over 1,000 donors who already make a difference every single day.
+      </p>
+      <a href="#donate-widget" class="btn btn-primary pulse-donate" style="padding:16px 40px; font-size:1.05rem;">
+        ❤️ Donate Now
+      </a>
+      <p style="margin-top:20px; font-size:0.8rem; color:#475569;">
+        🔒 Secure · 🧾 Tax Deductible · 💯 Transparent · ❤️ Life-Changing
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <a href="index.html" class="logo">
+          <img src="assets/icons/icon-192.png" alt="Logo">
+          <span>resQ<span class="logo-accent">paws</span></span>
+        </a>
+        <p class="footer-text">Empowering citizens to report animal emergencies and coordinating shelters dynamically using AI-Assisted assessments.</p>
+        <div class="footer-socials">
+          <a href="#" class="footer-social">FB</a>
+          <a href="#" class="footer-social">TW</a>
+          <a href="#" class="footer-social">IG</a>
+        </div>
+      </div>
+      <div>
+        <h4 class="footer-title">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="index.html" class="footer-link">Home</a></li>
+          <li><a href="about.html" class="footer-link">About Us</a></li>
+          <li><a href="donate.html" class="footer-link">Donate</a></li>
+          <li><a href="contact.html" class="footer-link">Contact Us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="footer-title">Rescue Modules</h4>
+        <ul class="footer-links">
+          <li><a href="report.html" class="footer-link">Report Emergency</a></li>
+          <li><a href="lost-found.html" class="footer-link">Lost &amp; Found</a></li>
+          <li><a href="volunteer.html" class="footer-link">Volunteer</a></li>
+          <li><a href="track.html" class="footer-link">Rescue Tracker</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="footer-title">Contact Help</h4>
+        <ul class="footer-links" style="color:#94a3b8; font-size:0.95rem;">
+          <li style="margin-bottom:8px;">📍 Bangalore Main Center, MG Road</li>
+          <li style="margin-bottom:8px;">📞 +91 98765 43210 (24/7 Helpline)</li>
+          <li style="margin-bottom:8px;">✉️ emergency@resqpaws.org</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p data-i18n="footerCopy">© 2026 resQpaws Animal Welfare Foundation. All rights reserved.</p>
+      <div style="display:flex; gap:20px;">
+        <a href="#" class="footer-link">Privacy Policy</a>
+        <a href="#" class="footer-link">Terms &amp; Conditions</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Sticky Mobile Donate Bar -->
+  <div class="sticky-donate-bar">
+    <p class="sticky-donate-text">Help rescue animals — <span>from ₹100</span></p>
+    <a href="#donate-widget" class="btn btn-primary btn-sm">Donate Now ❤️</a>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="donation-modal" id="donation-modal">
+    <div class="donation-modal-box">
+      <div class="modal-success-icon">🎉</div>
+      <h2 style="margin-bottom:10px;">Thank You!</h2>
+      <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:8px;" id="modal-message">
+        Your donation of <strong id="modal-amount">₹500</strong> has been received.
+      </p>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:4px;">
+        📧 A receipt has been sent to your email address.
+      </p>
+      <p style="color:var(--text-muted); font-size:0.85rem;">
+        🐾 You just helped save an animal's life. You're a hero!
+      </p>
+      <button class="btn btn-primary modal-close-btn" onclick="closeDonationModal()" style="width:100%;">
+        Close &amp; Continue
+      </button>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+  <!-- App scripts -->
+  <script src="data/sample-data.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- DONATIONS PAGE CONTROLLER                                           -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <script>
+  (function DonationsPage() {
+
+    // ─── State ──────────────────────────────────────────────────────────
+    let selectedAmount = 500;
+    let selectedFrequency = 'onetime';
+    let selectedPayMethod = 'UPI';
+
+    // ─── Amount Selection ────────────────────────────────────────────────
+    window.selectAmount = function(amount, cardEl) {
+      selectedAmount = amount;
+      document.querySelectorAll('.amount-card').forEach(c => c.classList.remove('selected'));
+      cardEl.classList.add('selected');
+      // Clear custom input if preset selected
+      document.getElementById('custom-amount-input').value = '';
+      updateDisplays();
+    };
+
+    window.handleCustomAmount = function(val) {
+      const amount = parseInt(val, 10);
+      if (amount >= 10) {
+        selectedAmount = amount;
+        document.querySelectorAll('.amount-card').forEach(c => c.classList.remove('selected'));
+        updateDisplays();
+      }
+    };
+
+    function updateDisplays() {
+      const fmt = '₹' + selectedAmount.toLocaleString('en-IN');
+      document.getElementById('pay-amount-display').textContent = fmt;
+
+      const summary = document.getElementById('donation-summary');
+      summary.style.display = 'block';
+      document.getElementById('summary-amount').textContent = fmt;
+      document.getElementById('summary-freq-label').textContent =
+        selectedFrequency === 'monthly' ? '🔄 Monthly Donation' : 'One-Time Donation';
+    }
+
+    // ─── Frequency ───────────────────────────────────────────────────────
+    window.setFrequency = function(freq) {
+      selectedFrequency = freq;
+      document.getElementById('freq-onetime').classList.toggle('active', freq === 'onetime');
+      document.getElementById('freq-monthly').classList.toggle('active', freq === 'monthly');
+      document.getElementById('freq-note').textContent =
+        freq === 'monthly'
+          ? '🔄 You will be charged monthly. Cancel anytime.'
+          : '';
+      updateDisplays();
+    };
+
+    // ─── Payment Method ──────────────────────────────────────────────────
+    window.selectPayMethod = function(btn) {
+      document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedPayMethod = btn.textContent.trim();
+      // Show/hide UPI field
+      const upiMethods = ['UPI', 'Google Pay', 'PhonePe', 'Paytm'];
+      const isUpi = upiMethods.some(m => selectedPayMethod.includes(m));
+      document.getElementById('upi-field').style.display = isUpi ? 'block' : 'none';
+    };
+
+    // ─── Quick Donate (from Campaign cards) ──────────────────────────────
+    window.quickDonate = function(campaignName) {
+      document.getElementById('donate-widget').scrollIntoView({ behavior: 'smooth' });
+      if (window.GPToast) {
+        window.GPToast.info('Campaign Selected', `Donating towards: ${campaignName}`);
+      }
+    };
+
+    // ─── Process Donation (Simulation) ───────────────────────────────────
+    // TODO: Replace simulation block below with Razorpay order creation:
+    // 1. POST to your backend /api/create-order with { amount, currency: 'INR' }
+    // 2. Receive order_id from backend
+    // 3. Call new Razorpay({ key, amount, order_id, ... }).open()
+    // 4. On success callback, verify signature server-side
+    window.processDonation = function() {
+      const name = document.getElementById('donor-name').value.trim();
+      const email = document.getElementById('donor-email').value.trim();
+
+      if (!name) {
+        if (window.GPToast) window.GPToast.warning('Missing Details', 'Please enter your name.');
+        document.getElementById('donor-name').focus();
+        return;
+      }
+      if (!email || !email.includes('@')) {
+        if (window.GPToast) window.GPToast.warning('Missing Details', 'Please enter a valid email for your receipt.');
+        document.getElementById('donor-email').focus();
+        return;
+      }
+      if (selectedAmount < 10) {
+        if (window.GPToast) window.GPToast.warning('Invalid Amount', 'Minimum donation is ₹10.');
+        return;
+      }
+
+      const btn = document.getElementById('donate-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Processing...';
+
+      // Simulate payment processing delay
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = '❤️ Donate Now';
+        showSuccessModal();
+      }, 1800);
+    };
+
+    function showSuccessModal() {
+      const fmt = '₹' + selectedAmount.toLocaleString('en-IN');
+      document.getElementById('modal-amount').textContent = fmt;
+      document.getElementById('donation-modal').classList.add('open');
+    }
+
+    window.closeDonationModal = function() {
+      document.getElementById('donation-modal').classList.remove('open');
+      if (window.GPToast) {
+        window.GPToast.success('Thank You! 🐾', 'Your kindness will save lives.');
+      }
+    };
+
+    // ─── FAQ Accordion ───────────────────────────────────────────────────
+    window.toggleFaq = function(btn) {
+      const item = btn.closest('.faq-item');
+      const answer = item.querySelector('.faq-answer');
+      const isOpen = item.classList.contains('open');
+
+      // Close all
+      document.querySelectorAll('.faq-item').forEach(i => {
+        i.classList.remove('open');
+        i.querySelector('.faq-answer').classList.remove('open');
+      });
+
+      // Toggle clicked
+      if (!isOpen) {
+        item.classList.add('open');
+        answer.classList.add('open');
+      }
+    };
+
+    // ─── Testimonials Slider ─────────────────────────────────────────────
+    (function initSlider() {
+      const track = document.getElementById('testimonial-track');
+      const slides = track.querySelectorAll('.testimonial-slide');
+      const dotsContainer = document.getElementById('slider-dots');
+      let current = 0;
+      let autoTimer;
+
+      slides.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'slider-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', `Testimonial ${i + 1}`);
+        dot.onclick = () => goTo(i);
+        dotsContainer.appendChild(dot);
+      });
+
+      function goTo(index) {
+        current = (index + slides.length) % slides.length;
+        track.style.transform = `translateX(-${current * 100}%)`;
+        dotsContainer.querySelectorAll('.slider-dot').forEach((d, i) => {
+          d.classList.toggle('active', i === current);
+        });
+      }
+
+      function startAuto() {
+        autoTimer = setInterval(() => goTo(current + 1), 5000);
+      }
+
+      track.addEventListener('mouseenter', () => clearInterval(autoTimer));
+      track.addEventListener('mouseleave', startAuto);
+      startAuto();
+    })();
+
+    // ─── Progress Bar Animation ──────────────────────────────────────────
+    (function animateProgressBars() {
+      const bars = document.querySelectorAll('.progress-bar-fill');
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const bar = entry.target;
+            const target = bar.getAttribute('data-width');
+            setTimeout(() => { bar.style.width = target + '%'; }, 200);
+            observer.unobserve(bar);
+          }
+        });
+      }, { threshold: 0.3 });
+      bars.forEach(b => observer.observe(b));
+    })();
+
+    // ─── Counter Animation ───────────────────────────────────────────────
+    (function initDonateCounters() {
+      const counters = document.querySelectorAll('#donate-stats-bar .counter-value');
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            counters.forEach(counter => {
+              const target = +counter.getAttribute('data-target');
+              const suffix = counter.getAttribute('data-suffix') || '';
+              const duration = 2200;
+              const step = target / (duration / 16);
+              let current = 0;
+              const tick = () => {
+                current += step;
+                if (current < target) {
+                  counter.textContent = Math.floor(current).toLocaleString('en-IN');
+                  requestAnimationFrame(tick);
+                } else {
+                  counter.textContent = target.toLocaleString('en-IN') + suffix;
+                }
+              };
+              tick();
+            });
+            observer.disconnect();
+          }
+        });
+      }, { threshold: 0.2 });
+
+      const statsBar = document.getElementById('donate-stats-bar');
+      if (statsBar) observer.observe(statsBar);
+    })();
+
+    // ─── Init: show donation summary on load ─────────────────────────────
+    updateDisplays();
+
+  })();
+  </script>
+
+</body>
+</html>

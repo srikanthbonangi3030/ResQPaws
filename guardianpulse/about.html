@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us - resQpaws</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+  <nav class="navbar" id="main-nav-bar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <img src="assets/icons/icon-192.png" alt="Logo">
+        <span>resQ<span class="logo-accent">paws</span></span>
+      </a>
+      
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle Menu">☰</button>
+      
+      <div class="nav-links" id="nav-links-menu">
+        <a href="index.html" class="nav-link" data-i18n="navHome">Home</a>
+        <a href="about.html" class="nav-link active" data-i18n="navAbout">About Us</a>
+        <a href="donate.html" class="nav-link">Donate</a>
+        <a href="contact.html" class="nav-link" data-i18n="navContact">Contact Us</a>
+
+        
+        <div class="nav-actions">
+          <!-- Language Selector -->
+          <div class="lang-select-wrapper">
+            <select class="lang-select" id="lang-switcher-select">
+              <option value="en">English</option>
+              <option value="te">తెలుగు</option>
+              <option value="hi">हिन्दी</option>
+            </select>
+          </div>
+          
+          <!-- Theme Toggle -->
+          <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Theme"></button>
+          
+          <!-- Dynamic Auth Button -->
+          <a href="login.html" class="btn btn-primary btn-sm" id="nav-profile-link" data-i18n="navLogin">Login</a>
+          <a href="#" class="btn btn-outline btn-sm" id="nav-logout-btn" style="display: none;" data-i18n="navLogout">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="page-header">
+    <h1 class="page-title" data-i18n="aboutTitle">About Our Mission</h1>
+    <p class="page-subtitle">resQpaws bridges the gap between animal welfare organizations and citizens reporting emergencies.</p>
+  </header>
+
+  <!-- Content Grid -->
+  <main class="page-section container-wide">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;">
+      <div>
+        <h2 style="font-size: 2.2rem; margin-bottom: 20px; color: var(--primary);">Our Vision</h2>
+        <p style="margin-bottom: 16px; font-size: 1.05rem; color: var(--text-muted);">resQpaws is built to act as the visual nervous system of animal rescue coordinates. Often, stray, injured, or stray animals are left on roadsides because citizens don't know who to call, or how to describe the emergency severity.</p>
+        <p style="margin-bottom: 16px; font-size: 1.05rem; color: var(--text-muted);">Our platform utilizes simulated AI-assisted visual severity scanner details to assign emergency levels (Critical, High, Medium, Low) and triggers immediate alerts to matching nearby NGOs based on active geo-locations.</p>
+        
+        <div style="display: flex; gap: 24px; margin-top: 32px;">
+          <div class="glass-card no-lift" style="flex: 1; padding: 20px;">
+            <h3 style="color: var(--primary); margin-bottom: 8px;">24/7 Support</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Constant support vectors linking citizens to rescuers.</p>
+          </div>
+          <div class="glass-card no-lift" style="flex: 1; padding: 20px;">
+            <h3 style="color: var(--primary); margin-bottom: 8px;">Zero Cost</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Free platform powered by open source mapping grids.</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <img src="assets/placeholder.png" style="border-radius: 16px; box-shadow: var(--shadow-lg); width: 100%; object-fit: cover; height: 400px;" alt="Rescue Vision">
+      </div>
+    </div>
+  </main>
+
+  <!-- Core Values -->
+  <section class="page-section" style="background-color: rgba(var(--primary-rgb), 0.02);">
+    <div class="container-wide">
+      <div style="text-align: center; margin-bottom: 50px;">
+        <h2 style="font-size: 2.2rem; margin-bottom: 8px;">Our Core Philosophy</h2>
+        <p style="color: var(--text-muted);">The values guiding our networks every single day.</p>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+        <div class="glass-card">
+          <h3 style="margin-bottom: 12px; color: var(--primary);">Integrity & Speed</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Every minute matters when an animal is bleeding. We route coordinates instantly to ensure minimal rescue wait times.</p>
+        </div>
+        <div class="glass-card">
+          <h3 style="margin-bottom: 12px; color: var(--primary);">Compassionate Welfare</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Treating every stray animal with the same diagnostic detail and dignity as a home pet. Every life matters.</p>
+        </div>
+        <div class="glass-card">
+          <h3 style="margin-bottom: 12px; color: var(--primary);">Community Trust</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Providing transparent tracking timelines so citizens can witness the exact rescue status of the animals they reported.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <a href="index.html" class="logo">
+          <img src="assets/icons/icon-192.png" alt="Logo">
+          <span>resQ<span class="logo-accent">paws</span></span>
+        </a>
+        <p class="footer-text">Empowering citizens to report animal emergencies and coordinating shelters dynamically using AI-Assisted assessments.</p>
+      </div>
+      
+      <div>
+        <h4 class="footer-title">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="index.html" class="footer-link">Home</a></li>
+          <li><a href="about.html" class="footer-link">About Us</a></li>
+          <li><a href="contact.html" class="footer-link">Contact Us</a></li>
+          <li><a href="report.html" class="footer-link">Report Emergency</a></li>
+        </ul>
+      </div>
+      
+      <div>
+        <h4 class="footer-title">Rescue Modules</h4>
+        <ul class="footer-links">
+          <li><a href="lost-found.html" class="footer-link">Lost & Found</a></li>
+          <li><a href="volunteer.html" class="footer-link">Volunteer</a></li>
+          <li><a href="track.html" class="footer-link">Rescue Tracker</a></li>
+        </ul>
+      </div>
+      
+      <div>
+        <h4 class="footer-title">Contact Help</h4>
+        <ul class="footer-links" style="color: #94a3b8; font-size: 0.95rem;">
+          <li style="margin-bottom: 8px;">📍 Bangalore Main Center, MG Road</li>
+          <li style="margin-bottom: 8px;">📞 +91 98765 43210 (24/7 Helpline)</li>
+          <li style="margin-bottom: 8px;">✉️ emergency@resqpaws.org</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="footer-bottom">
+      <p data-i18n="footerCopy">© 2026 resQpaws Animal Welfare Foundation. All rights reserved.</p>
+      <div style="display: flex; gap: 20px;">
+        <a href="#" class="footer-link">Privacy Policy</a>
+        <a href="#" class="footer-link">Terms & Conditions</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  
+  <script src="data/sample-data.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
