@@ -4,11 +4,13 @@ import json
 import math
 import datetime
 import urllib.request
+import urllib.parse
 import urllib.error
+import concurrent.futures
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from models import db, Hospital, EmergencyReport
+from models import db, EmergencyReport
 
 PORT = 8000
 DIRECTORY = os.path.join(os.path.dirname(__file__), "guardianpulse")
@@ -37,8 +39,7 @@ Your two responsibilities:
 
 PLATFORM FEATURES YOU MUST KNOW:
 - Report Emergency (report.html): User selects animal type, writes a description, picks a location by clicking the map, optionally uploads a photo, and submits. The platform's AI-assisted assessment estimates severity (Critical/High/Medium/Low) and confidence %, then alerts nearby NGOs.
-- Nearby Animal Hospital Finder (integrated in report.html & hospital_details.html): After submitting a report, the application automatically finds nearby hospitals using the browser Geolocation API, calculates distance using the Haversine formula, and displays the top 5 nearest hospitals. (hospitals never receive any alerts or notifications - this is user facing only).
-- Hospital Management (admin_hospitals.html): Admin panel to Add, Edit, Delete, Search, and View veterinary hospitals.
+- Nearby Animal Hospital Finder (integrated in report.html): After submitting a report, the application automatically finds nearby real-time veterinary clinics using Google Places API (Nearby Search + Place Details) and displays the top 5 nearest clinics on a Leaflet map.
 - Lost & Found (lost-found.html): Users post or browse lost/found pet listings.
 - Adopt a Pet (adopt.html): Users browse adoptable animals and submit adoption requests.
 - Track Adoptions (track-adoptions.html): Users check the status of their adoption requests.
@@ -69,140 +70,42 @@ def haversine(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
-# Seeder function
-def seed_hospitals():
-    if Hospital.query.first() is not None:
-        return
-    
-    print("Seeding default hospitals...")
-    hospitals_data = [
-        {
-            "hospital_name": "resQpaws Indiranagar Care Clinic",
-            "hospital_image": "assets/hospital_exterior.jpg",
-            "address": "12, 100 Feet Rd, Hal 2nd Stage, Indiranagar",
-            "city": "Bengaluru",
-            "district": "Bengaluru Urban",
-            "state": "Karnataka",
-            "phone": "+91 98450 12345",
-            "email": "indiranagar@resqpaws.org",
-            "website": "https://indiranagar.resqpaws.org",
-            "latitude": 12.9719,
-            "longitude": 77.6412,
-            "emergency_service": True,
-            "opening_hours": "24 Hours",
-            "rating": 4.8
-        },
-        {
-            "hospital_name": "Koramangala Veterinary Hospital",
-            "hospital_image": "assets/hospital_exterior.jpg",
-            "address": "432, 80 Feet Rd, 4th Block, Koramangala",
-            "city": "Bengaluru",
-            "district": "Bengaluru Urban",
-            "state": "Karnataka",
-            "phone": "+91 98450 54321",
-            "email": "koramangala.vet@gmail.com",
-            "website": "https://koramangalavets.com",
-            "latitude": 12.9279,
-            "longitude": 77.6271,
-            "emergency_service": True,
-            "opening_hours": "08:00 AM - 10:00 PM",
-            "rating": 4.5
-        },
-        {
-            "hospital_name": "Hebbal Animal Rescue Shelter & Clinic",
-            "hospital_image": "assets/hospital_exterior.jpg",
-            "address": "Veterinary College Campus, Bellary Rd, Hebbal",
-            "city": "Bengaluru",
-            "district": "Bengaluru Urban",
-            "state": "Karnataka",
-            "phone": "+91 98450 98765",
-            "email": "hebbal.shelter@animalwelfare.in",
-            "website": "https://hebbalanimalrescue.org",
-            "latitude": 13.0354,
-            "longitude": 77.5988,
-            "emergency_service": False,
-            "opening_hours": "09:00 AM - 06:00 PM",
-            "rating": 4.2
-        },
-        {
-            "hospital_name": "Whitefield Pet & Wildlife Clinic",
-            "hospital_image": "assets/hospital_exterior.jpg",
-            "address": "88, Whitefield Main Rd, Opposite Columbia Asia",
-            "city": "Bengaluru",
-            "district": "Bengaluru Urban",
-            "state": "Karnataka",
-            "phone": "+91 98450 11111",
-            "email": "contact@whitefieldpetclinic.com",
-            "website": "https://whitefieldpetclinic.com",
-            "latitude": 12.9698,
-            "longitude": 77.7500,
-            "emergency_service": True,
-            "opening_hours": "24 Hours",
-            "rating": 4.6
-        },
-        {
-            "hospital_name": "Jayanagar Vet Services",
-            "hospital_image": "assets/hospital_exterior.jpg",
-            "address": "15, 9th Main Rd, 3rd Block, Jayanagar",
-            "city": "Bengaluru",
-            "district": "Bengaluru Urban",
-            "state": "Karnataka",
-            "phone": "+91 98450 22222",
-            "email": "jayanagarvet@yahoo.com",
-            "website": "",
-            "latitude": 12.9308,
-            "longitude": 77.5838,
-            "emergency_service": False,
-            "opening_hours": "09:00 AM - 08:00 PM",
-            "rating": 4.0
-        },
-        {
-            "hospital_name": "HSR Emergency Animal Clinic",
-            "hospital_image": "assets/hospital_exterior.jpg",
-            "address": "22nd Cross Rd, Sector 3, HSR Layout",
-            "city": "Bengaluru",
-            "district": "Bengaluru Urban",
-            "state": "Karnataka",
-            "phone": "+91 98450 33333",
-            "email": "hsr.emergency@gmail.com",
-            "website": "https://hsranimalclinic.com",
-            "latitude": 12.9100,
-            "longitude": 77.6450,
-            "emergency_service": True,
-            "opening_hours": "24 Hours",
-            "rating": 4.7
-        }
-    ]
-    
-    for h in hospitals_data:
-        hospital = Hospital(**h)
-        db.session.add(hospital)
-    db.session.commit()
-    print("Database seeded successfully.")
-
-# Setup database and seeder
+# Setup database tables
 with app.app_context():
     db.create_all()
-    seed_hospitals()
+
+
+# Helper function to fetch Google Places Nearby Search
+def fetch_nearby_places(lat, lng, radius, keyword, api_key):
+    url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat},{lng}&radius={radius}&keyword={urllib.parse.quote(keyword)}&key={api_key}"
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'resQpaws API Agent'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            return data.get("results", [])
+    except Exception as e:
+        print(f"Error fetching Google Places Nearby for keyword '{keyword}' in radius {radius}m: {e}")
+        return []
+
+# Helper function to fetch Google Place Details
+def fetch_place_details(place_id, api_key):
+    fields = "name,formatted_address,geometry,rating,user_ratings_total,business_status,opening_hours,formatted_phone_number,international_phone_number,website,url,photos"
+    url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields={fields}&key={api_key}"
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'resQpaws API Agent'})
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            return data.get("result", {})
+    except Exception as e:
+        print(f"Error fetching Google Place Details for place_id '{place_id}': {e}")
+        return {}
 
 
 # --------------------- BACKEND APIS ---------------------
 
-@app.route('/api/hospitals', methods=['GET'])
-def get_hospitals():
-    """Return all hospitals."""
-    hospitals = Hospital.query.all()
-    return jsonify([h.to_dict() for h in hospitals]), 200
-
-@app.route('/api/hospitals/<int:hospital_id>', methods=['GET'])
-def get_hospital_detail(hospital_id):
-    """Return details of a specific hospital."""
-    hospital = Hospital.query.get_or_404(hospital_id)
-    return jsonify(hospital.to_dict()), 200
-
 @app.route('/api/reports', methods=['POST'])
 def submit_report():
-    """Accept and save an Emergency Animal Report, then find the nearest hospitals."""
+    """Accept and save an Emergency Animal Report, then find the nearest real-time clinics from Google Places API."""
     try:
         # Support both form data (with image file) and JSON payloads
         if request.content_type and 'multipart/form-data' in request.content_type:
@@ -228,11 +131,10 @@ def submit_report():
         except (ValueError, TypeError):
             return jsonify({"success": False, "message": "Invalid latitude/longitude format"}), 400
 
-        # Handle image upload
+        # Handle optional image upload
         image_path = None
         if image_file and image_file.filename:
             filename = secure_filename(image_file.filename)
-            # Add unique timestamp to filename to prevent collisions
             timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
             filename = f"{timestamp}_{filename}"
             save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -245,7 +147,7 @@ def submit_report():
         count = EmergencyReport.query.filter(EmergencyReport.id.like(f"{prefix}%")).count()
         report_id = f"{prefix}{count + 1:03d}"
 
-        # Create emergency report
+        # Create emergency report record
         report = EmergencyReport(
             id=report_id,
             user_id=user_id,
@@ -262,146 +164,147 @@ def submit_report():
         db.session.add(report)
         db.session.commit()
 
-        # Calculate distances to all hospitals
-        hospitals = Hospital.query.all()
-        hospitals_with_distance = []
-        for h in hospitals:
-            dist = haversine(latitude, longitude, h.latitude, h.longitude)
-            h_dict = h.to_dict()
-            h_dict['distance_km'] = round(dist, 2)
-            hospitals_with_distance.append(h_dict)
+        # 🚀 Google Places API Live Search Setup
+        api_key = os.environ.get("GOOGLE_PLACES_API_KEY") or os.environ.get("GOOGLE_MAPS_API_KEY") or os.environ.get("GEMINI_API_KEY")
+        
+        if not api_key:
+            # Check env file fallback
+            env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+            if os.path.exists(env_path):
+                with open(env_path, "r") as f:
+                    for line in f:
+                        if line.startswith("GEMINI_API_KEY="):
+                            api_key = line.split("=", 1)[1].strip()
+                            break
+                        elif line.startswith("GOOGLE_PLACES_API_KEY="):
+                            api_key = line.split("=", 1)[1].strip()
+                            break
 
-        # Sort hospitals by distance ascending
-        hospitals_with_distance.sort(key=lambda x: x['distance_km'])
+        if not api_key:
+            return jsonify({
+                "success": True,
+                "message": "Emergency report submitted successfully, but Google Places API key is missing on the server.",
+                "report": report.to_dict(),
+                "nearby_hospitals": []
+            }), 201
 
-        # Keep top 5
-        top_5_hospitals = hospitals_with_distance[:5]
+        # Search queries
+        keywords = ["Veterinary Hospital", "Veterinary Clinic", "Veterinary Care", "Animal Hospital", "Pet Hospital"]
+        
+        # Progressive search radii: 5km, 10km, 20km, 30km, 50km
+        radii = [5000, 10000, 20000, 30000, 50000]
+        places_map = {}
+
+        # Search progressively in parallel for each radius
+        for r in radii:
+            print(f"Searching veterinary clinics in {r/1000}km radius...")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                futures = {executor.submit(fetch_nearby_places, latitude, longitude, r, kw, api_key): kw for kw in keywords}
+                for fut in concurrent.futures.as_completed(futures):
+                    results = fut.result()
+                    for p in results:
+                        p_id = p.get("place_id")
+                        if p_id and p_id not in places_map:
+                            places_map[p_id] = p
+            
+            # If we've gathered at least 5 clinics, stop expanding radius
+            if len(places_map) >= 5:
+                break
+
+        # Filter out permanently closed, coordinates validation, and compute Haversine distance
+        valid_hospitals = []
+        for p_id, p in places_map.items():
+            status = p.get("business_status", "")
+            if status == "CLOSED_PERMANENTLY":
+                continue
+                
+            loc = p.get("geometry", {}).get("location", {})
+            h_lat = loc.get("lat")
+            h_lng = loc.get("lng")
+            if h_lat is None or h_lng is None:
+                continue
+
+            dist = haversine(latitude, longitude, h_lat, h_lng)
+            p['distance_km'] = round(dist, 2)
+            valid_hospitals.append(p)
+
+        # Sort dynamically using sorting criteria: 1. Distance, 2. Open Now, 3. Rating, 4. Reviews count
+        def sort_key(place):
+            dist = place.get("distance_km", 999999.0)
+            open_now = place.get("opening_hours", {}).get("open_now")
+            open_val = 0 if open_now is True else 1
+            rating_val = -place.get("rating", 0.0)
+            reviews_val = -place.get("user_ratings_total", 0)
+            return (dist, open_val, rating_val, reviews_val)
+
+        valid_hospitals.sort(key=sort_key)
+        top_5 = valid_hospitals[:5]
+
+        # Fetch Place Details in parallel for the top 5 places to retrieve complete website and phone contacts
+        detailed_hospitals = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(fetch_place_details, h.get("place_id"), api_key): h for h in top_5}
+            for fut in concurrent.futures.as_completed(futures):
+                original_h = futures[fut]
+                details = fut.result()
+                if not details:
+                    details = original_h
+                
+                # Format Photo URL
+                photos = details.get("photos", [])
+                photo_url = None
+                if photos:
+                    photo_ref = photos[0].get("photo_reference")
+                    if photo_ref:
+                        photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_ref}&key={api_key}"
+                
+                loc = details.get("geometry", {}).get("location", {})
+                h_lat = loc.get("lat", original_h.get("geometry", {}).get("location", {}).get("lat", 0.0))
+                h_lng = loc.get("lng", original_h.get("geometry", {}).get("location", {}).get("lng", 0.0))
+
+                open_now = details.get("opening_hours", {}).get("open_now")
+                open_status = "Open Now" if open_now is True else ("Closed" if open_now is False else "Unknown")
+
+                h_info = {
+                    "place_id": original_h.get("place_id"),
+                    "name": details.get("name", original_h.get("name", "Veterinary Hospital")),
+                    "address": details.get("formatted_address", original_h.get("vicinity", "Address Unavailable")),
+                    "latitude": h_lat,
+                    "longitude": h_lng,
+                    "distance_km": original_h.get("distance_km"),
+                    "rating": details.get("rating", original_h.get("rating", 0.0)),
+                    "user_ratings_total": details.get("user_ratings_total", original_h.get("user_ratings_total", 0)),
+                    "business_status": details.get("business_status", original_h.get("business_status", "OPERATIONAL")),
+                    "open_now": open_now,
+                    "open_status": open_status,
+                    "phone_number": details.get("formatted_phone_number", ""),
+                    "international_phone_number": details.get("international_phone_number", ""),
+                    "website": details.get("website", ""),
+                    "google_maps_url": details.get("url", f"https://www.google.com/maps/place/?q=place_id:{original_h.get('place_id')}"),
+                    "photo_url": photo_url,
+                    "opening_hours": details.get("opening_hours", {}).get("weekday_text", [])
+                }
+                detailed_hospitals.append(h_info)
+
+        # Sort the final results to preserve exact sorting order
+        detailed_hospitals.sort(key=lambda x: (
+            x.get("distance_km", 999999.0),
+            0 if x.get("open_now") is True else 1,
+            -x.get("rating", 0.0),
+            -x.get("user_ratings_total", 0)
+        ))
 
         return jsonify({
             "success": True,
             "message": "Emergency report submitted successfully.",
             "report": report.to_dict(),
-            "nearby_hospitals": top_5_hospitals
+            "nearby_hospitals": detailed_hospitals
         }), 201
 
     except Exception as e:
         db.session.rollback()
         print("Error submitting report:", str(e))
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
-
-
-# --------------------- ADMIN CRUD FOR HOSPITALS ---------------------
-
-@app.route('/api/admin/hospitals', methods=['POST'])
-def admin_add_hospital():
-    """Add a new veterinary hospital."""
-    try:
-        if request.content_type and 'multipart/form-data' in request.content_type:
-            data = request.form
-            image_file = request.files.get('hospital_image')
-        else:
-            data = request.json
-            image_file = None
-
-        if not data:
-            return jsonify({"success": False, "message": "No data provided"}), 400
-
-        # Handle image upload
-        image_path = "assets/hospital_exterior.jpg"
-        if image_file and image_file.filename:
-            filename = secure_filename(image_file.filename)
-            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"hosp_{timestamp}_{filename}"
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            image_file.save(save_path)
-            image_path = f"uploads/{filename}"
-
-        hospital = Hospital(
-            hospital_name=data.get('hospital_name', ''),
-            hospital_image=image_path,
-            address=data.get('address', ''),
-            city=data.get('city', ''),
-            district=data.get('district', ''),
-            state=data.get('state', ''),
-            phone=data.get('phone', ''),
-            email=data.get('email', ''),
-            website=data.get('website', ''),
-            latitude=float(data.get('latitude', 0.0)),
-            longitude=float(data.get('longitude', 0.0)),
-            emergency_service=data.get('emergency_service', 'false').lower() == 'true',
-            opening_hours=data.get('opening_hours', ''),
-            rating=float(data.get('rating', 0.0))
-        )
-        db.session.add(hospital)
-        db.session.commit()
-        return jsonify({"success": True, "message": "Hospital added successfully.", "hospital": hospital.to_dict()}), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"success": False, "message": str(e)}), 500
-
-@app.route('/api/admin/hospitals/<int:h_id>', methods=['PUT'])
-def admin_edit_hospital(h_id):
-    """Edit an existing veterinary hospital."""
-    try:
-        hospital = Hospital.query.get_or_404(h_id)
-        
-        if request.content_type and 'multipart/form-data' in request.content_type:
-            data = request.form
-            image_file = request.files.get('hospital_image')
-        else:
-            data = request.json
-            image_file = None
-
-        if not data:
-            return jsonify({"success": False, "message": "No data provided"}), 400
-
-        # Handle image upload if provided
-        if image_file and image_file.filename:
-            filename = secure_filename(image_file.filename)
-            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"hosp_{timestamp}_{filename}"
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            image_file.save(save_path)
-            hospital.hospital_image = f"uploads/{filename}"
-
-        hospital.hospital_name = data.get('hospital_name', hospital.hospital_name)
-        hospital.address = data.get('address', hospital.address)
-        hospital.city = data.get('city', hospital.city)
-        hospital.district = data.get('district', hospital.district)
-        hospital.state = data.get('state', hospital.state)
-        hospital.phone = data.get('phone', hospital.phone)
-        hospital.email = data.get('email', hospital.email)
-        hospital.website = data.get('website', hospital.website)
-        hospital.latitude = float(data.get('latitude', hospital.latitude))
-        hospital.longitude = float(data.get('longitude', hospital.longitude))
-        
-        if 'emergency_service' in data:
-            val = data.get('emergency_service')
-            if isinstance(val, str):
-                hospital.emergency_service = val.lower() == 'true'
-            else:
-                hospital.emergency_service = bool(val)
-                
-        hospital.opening_hours = data.get('opening_hours', hospital.opening_hours)
-        hospital.rating = float(data.get('rating', hospital.rating))
-
-        db.session.commit()
-        return jsonify({"success": True, "message": "Hospital updated successfully.", "hospital": hospital.to_dict()}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"success": False, "message": str(e)}), 500
-
-@app.route('/api/admin/hospitals/<int:h_id>', methods=['DELETE'])
-def admin_delete_hospital(h_id):
-    """Delete a veterinary hospital."""
-    try:
-        hospital = Hospital.query.get_or_404(h_id)
-        db.session.delete(hospital)
-        db.session.commit()
-        return jsonify({"success": True, "message": "Hospital deleted successfully."}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"success": False, "message": str(e)}), 500
 
 
 # --------------------- CHATBOT PROXY ENDPOINT ---------------------
