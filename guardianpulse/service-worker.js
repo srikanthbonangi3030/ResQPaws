@@ -2,7 +2,7 @@
 // Strategy: Always try network first, fall back to cache only when offline.
 // This ensures code changes are always picked up without needing a manual refresh.
 
-const CACHE_NAME = 'resqpaws-v3';
+const CACHE_NAME = 'resqpaws-v4';
 
 // Static assets worth caching for offline resilience (non-HTML, non-JS pages).
 // HTML and JS are intentionally excluded from pre-caching to avoid stale content.
@@ -12,6 +12,8 @@ const STATIC_ASSETS = [
   './assets/images/hero-bg.png',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
+  './assets/screenshots/screenshot1.png',
+  './assets/screenshots/screenshot2.png',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 ];

@@ -1,22 +1,73 @@
 {
+  "id": "/",
+  "scope": "./",
   "name": "resQpaws - AI Animal Rescue & NGO Coordination",
   "short_name": "resQpaws",
-  "description": "AI-powered animal rescue and NGO coordination platform.",
+  "description": "AI-powered stray, injured, and abandoned animal rescue and NGO coordination platform.",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#0F172A",
   "theme_color": "#16A34A",
   "orientation": "portrait-primary",
+  "categories": [
+    "social",
+    "utilities",
+    "lifestyle"
+  ],
   "icons": [
     {
       "src": "assets/icons/icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "assets/icons/icon-512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Report Emergency",
+      "short_name": "Report",
+      "description": "Report a stray animal emergency instantly.",
+      "url": "report.html",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Volunteer Registration",
+      "short_name": "Volunteer",
+      "description": "Sign up as a community volunteer.",
+      "url": "volunteer.html",
+      "icons": [
+        {
+          "src": "assets/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshots/screenshot1.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "resQpaws Emergency Reporting Screen"
+    },
+    {
+      "src": "assets/screenshots/screenshot2.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "resQpaws Volunteer Registration Screen"
     }
   ]
 }

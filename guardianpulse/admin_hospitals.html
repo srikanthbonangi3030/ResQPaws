@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Management - resQpaws Admin</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="manifest" href="manifest.json">
+  
+  <style>
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 0.95rem;
+    }
+    .admin-table th, .admin-table td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-card);
+    }
+    .admin-table th {
+      background-color: rgba(var(--primary-rgb), 0.05);
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .admin-table tr:hover {
+      background-color: rgba(var(--primary-rgb), 0.02);
+    }
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      background-color: var(--bg-card-opaque);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 600px;
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .badge-emergency {
+      background-color: var(--danger);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .badge-standard {
+      background-color: var(--text-muted);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar" id="main-nav-bar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <img src="assets/icons/icon-192.png" alt="Logo">
+        <span>resQ<span class="logo-accent">paws</span></span>
+      </a>
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle Menu">☰</button>
+      <div class="nav-links" id="nav-links-menu">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="about.html" class="nav-link">About Us</a>
+        <a href="donate.html" class="nav-link">Donate</a>
+        <a href="contact.html" class="nav-link">Contact Us</a>
+        <div class="nav-actions">
+          <a href="login.html" class="btn btn-outline btn-sm" id="nav-profile-link">Login</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="page-header" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 40px 24px;">
+    <div class="container-wide" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+      <div>
+        <h1 class="page-title" style="color: white; margin-bottom: 8px;">Hospital Directory Management</h1>
+        <p class="page-subtitle" style="color: #94a3b8; margin: 0;">Add, Edit, Search, and Delete veterinary clinics in the database.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">➕ Add New Hospital</button>
+    </div>
+  </header>
+
+  <!-- Main Section -->
+  <main class="page-section container-wide">
+    <div class="glass-card no-lift">
+      <!-- Search & Filters -->
+      <div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+        <input type="text" id="admin-search-input" class="form-control" placeholder="Search hospital name, address, city or state..." style="flex-grow: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);">
+      </div>
+
+      <!-- Hospitals Table -->
+      <div style="overflow-x: auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Hospital Name</th>
+              <th>Phone</th>
+              <th>City / State</th>
+              <th>Rating</th>
+              <th>Emergency Service</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-hospitals-list">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Modal (Initially Hidden) -->
+  <div id="hospital-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h3 id="modal-title" style="font-size: 1.5rem; margin: 0;">Add Veterinary Hospital</h3>
+        <button onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">✕</button>
+      </div>
+
+      <form id="hospital-form">
+        <input type="hidden" id="edit-hospital-id">
+        
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label">Hospital Name</label>
+          <input type="text" id="hospital_name" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label">Hospital Image</label>
+          <input type="file" id="hospital_image" class="form-control" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" accept="image/*">
+          <small style="color: var(--text-muted);">Leave empty to use the default exterior banner.</small>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label">Address</label>
+          <input type="text" id="address" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" id="city" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">District</label>
+            <input type="text" id="district" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label class="form-label">State</label>
+            <input type="text" id="state" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="text" id="phone" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" placeholder="+91 XXXXX XXXXX" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label class="form-label">Email Address (Optional)</label>
+            <input type="email" id="email" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Website URL (Optional)</label>
+            <input type="url" id="website" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" placeholder="https://...">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label class="form-label">Latitude</label>
+            <input type="number" step="any" id="latitude" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Longitude</label>
+            <input type="number" step="any" id="longitude" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; margin-bottom: 24px;">
+          <div class="form-group">
+            <label class="form-label">Opening Hours</label>
+            <input type="text" id="opening_hours" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" placeholder="E.g., 24 Hours or 09:00 AM - 06:00 PM" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rating (0 - 5)</label>
+            <input type="number" min="0" max="5" step="0.1" id="rating" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--input-border); background-color:var(--input-bg); color:var(--text-main);" value="4.5" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;">
+            <input type="checkbox" id="emergency_service" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);"> 24/7 Emergency Rescue & Medical Service Available
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Save Hospital</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+  <footer class="footer" style="margin-top: 60px;">
+    <div class="container-wide" style="text-align: center; color: var(--text-muted); font-size: 0.95rem;">
+      <p>© 2026 resQpaws Admin. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Script Logic -->
+  <script>
+    let allHospitals = [];
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await fetchHospitals();
+
+      // Hook up search filter
+      document.getElementById("admin-search-input").addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase();
+        renderHospitals(allHospitals.filter(h => 
+          h.hospital_name.toLowerCase().includes(query) ||
+          h.address.toLowerCase().includes(query) ||
+          h.city.toLowerCase().includes(query) ||
+          h.state.toLowerCase().includes(query)
+        ));
+      });
+
+      // Hook up submit form
+      document.getElementById("hospital-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await saveHospital();
+      });
+    });
+
+    async function fetchHospitals() {
+      try {
+        const response = await fetch("/api/hospitals");
+        if (!response.ok) throw new Error("Failed to load hospitals list.");
+        allHospitals = await response.json();
+        renderHospitals(allHospitals);
+      } catch (err) {
+        console.error(err);
+        alert("Error loading hospitals database: " + err.message);
+      }
+    }
+
+    function renderHospitals(list) {
+      const tbody = document.getElementById("admin-hospitals-list");
+      tbody.innerHTML = "";
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No veterinary clinics found.</td></tr>`;
+        return;
+      }
+
+      list.forEach(h => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><img src="${h.hospital_image || 'assets/hospital_exterior.jpg'}" alt="exterior" style="width:60px; height:45px; object-fit:cover; border-radius:4px; border:1px solid var(--border-card);"></td>
+          <td style="font-weight:600;">${h.hospital_name}</td>
+          <td>${h.phone}</td>
+          <td>${h.city}, ${h.state}</td>
+          <td>⭐ ${h.rating}</td>
+          <td><span class="${h.emergency_service ? 'badge-emergency' : 'badge-standard'}">${h.emergency_service ? 'YES' : 'NO'}</span></td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="openEditModal(${h.id})" style="padding:6px 12px; font-size:0.8rem; border-radius:6px; margin-right:8px; border-color:var(--primary); color:var(--primary);">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteHospital(${h.id})" style="padding:6px 12px; font-size:0.8rem; border-radius:6px; background-color:var(--danger);">🗑️ Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openAddModal() {
+      document.getElementById("modal-title").textContent = "Add Veterinary Hospital";
+      document.getElementById("hospital-form").reset();
+      document.getElementById("edit-hospital-id").value = "";
+      document.getElementById("hospital-modal").style.display = "flex";
+    }
+
+    function openEditModal(id) {
+      const h = allHospitals.find(item => item.id === id);
+      if (!h) return;
+
+      document.getElementById("modal-title").textContent = "Edit Veterinary Hospital";
+      document.getElementById("edit-hospital-id").value = h.id;
+      document.getElementById("hospital_name").value = h.hospital_name;
+      document.getElementById("address").value = h.address;
+      document.getElementById("city").value = h.city;
+      document.getElementById("district").value = h.district;
+      document.getElementById("state").value = h.state;
+      document.getElementById("phone").value = h.phone;
+      document.getElementById("email").value = h.email || "";
+      document.getElementById("website").value = h.website || "";
+      document.getElementById("latitude").value = h.latitude;
+      document.getElementById("longitude").value = h.longitude;
+      document.getElementById("opening_hours").value = h.opening_hours;
+      document.getElementById("rating").value = h.rating;
+      document.getElementById("emergency_service").checked = h.emergency_service;
+
+      document.getElementById("hospital-modal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("hospital-modal").style.display = "none";
+    }
+
+    async function saveHospital() {
+      const id = document.getElementById("edit-hospital-id").value;
+      const isEdit = id !== "";
+      
+      const formData = new FormData();
+      formData.append("hospital_name", document.getElementById("hospital_name").value);
+      formData.append("address", document.getElementById("address").value);
+      formData.append("city", document.getElementById("city").value);
+      formData.append("district", document.getElementById("district").value);
+      formData.append("state", document.getElementById("state").value);
+      formData.append("phone", document.getElementById("phone").value);
+      formData.append("email", document.getElementById("email").value);
+      formData.append("website", document.getElementById("website").value);
+      formData.append("latitude", document.getElementById("latitude").value);
+      formData.append("longitude", document.getElementById("longitude").value);
+      formData.append("opening_hours", document.getElementById("opening_hours").value);
+      formData.append("rating", document.getElementById("rating").value);
+      formData.append("emergency_service", document.getElementById("emergency_service").checked);
+
+      const imageFile = document.getElementById("hospital_image").files[0];
+      if (imageFile) {
+        formData.append("hospital_image", imageFile);
+      }
+
+      const url = isEdit ? `/api/admin/hospitals/${id}` : "/api/admin/hospitals";
+      const method = isEdit ? "PUT" : "POST";
+
+      try {
+        const response = await fetch(url, {
+          method: method,
+          body: formData
+        });
+
+        const res = await response.json();
+        if (!response.ok || !res.success) {
+          throw new Error(res.message || "Failed to save hospital.");
+        }
+
+        alert(isEdit ? "Hospital updated successfully!" : "Hospital added successfully!");
+        closeModal();
+        await fetchHospitals();
+      } catch (err) {
+        console.error(err);
+        alert("Error saving clinic details: " + err.message);
+      }
+    }
+
+    async function deleteHospital(id) {
+      if (!confirm("Are you sure you want to delete this veterinary hospital from the registry?")) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/admin/hospitals/${id}`, {
+          method: "DELETE"
+        });
+
+        const res = await response.json();
+        if (!response.ok || !res.success) {
+          throw new Error(res.message || "Failed to delete hospital.");
+        }
+
+        alert("Hospital deleted successfully!");
+        await fetchHospitals();
+      } catch (err) {
+        console.error(err);
+        alert("Error deleting clinic: " + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

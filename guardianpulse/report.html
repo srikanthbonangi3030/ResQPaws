@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
@@ -11,10 +11,11 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
-    <!-- Navigation Bar -->
+  <!-- Navigation Bar -->
   <nav class="navbar" id="main-nav-bar">
     <div class="nav-container">
       <a href="index.html" class="logo">
@@ -52,13 +53,31 @@
   </nav>
 
   <!-- Header -->
-  <header class="page-header">
+  <header class="page-header" id="report-page-header">
     <h1 class="page-title">Report Animal Emergency</h1>
     <p class="page-subtitle">Submit details of injured, trapped, or sick animals. Our simulated AI system will assess severity and alert nearby NGOs.</p>
   </header>
 
+  <!-- Success Screen Panel (Initially Hidden) -->
+  <div id="report-success-panel" style="display: none; max-width: 1200px; margin: 0 auto 40px auto; padding: 0 24px;">
+    <div class="glass-card" style="border-left: 4px solid var(--primary); text-align: center; margin-bottom: 32px; padding: 40px 24px;">
+      <span style="font-size: 4rem; display: block; margin-bottom: 16px;">✅</span>
+      <h2 style="font-size: 2.2rem; color: var(--primary); margin-bottom: 8px;">Emergency Report Submitted Successfully</h2>
+      <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 700px; margin: 0 auto 24px auto;">We found the nearest veterinary hospitals near your location. You can view details, call them directly, or get directions on Google Maps.</p>
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        <a id="success-track-btn" href="#" class="btn btn-primary">Track Case Progress</a>
+        <button class="btn btn-outline" onclick="reportAnotherEmergency()">Report Another Emergency</button>
+      </div>
+    </div>
+    
+    <h3 style="font-size: 1.8rem; margin-bottom: 24px; text-align: center; font-family: var(--font-title);">Top 5 Nearest Veterinary Hospitals</h3>
+    <div id="hospitals-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; margin-bottom: 40px;">
+      <!-- Cards will be dynamically inserted here -->
+    </div>
+  </div>
+
   <!-- Form content -->
-  <main class="page-section container-wide">
+  <main class="page-section container-wide" id="report-form-panel">
     <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px;">
       
       <!-- Left Column: Report Form details -->
@@ -67,10 +86,10 @@
           <h2 style="font-size: 1.8rem; margin-bottom: 24px;">Incident Details</h2>
           
           <form id="report-emergency-form">
-            <div class="form-row">
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
               <div class="form-group">
                 <label class="form-label">Animal Type</label>
-                <select id="animal-type" class="form-control" required>
+                <select id="animal-type" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
                   <option value="Dog">Dog</option>
                   <option value="Cat">Cat</option>
                   <option value="Cow">Cow</option>
@@ -79,24 +98,47 @@
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">Reporter Contact Number</label>
-                <input type="text" id="contact-number" class="form-control" placeholder="+91 XXXXX XXXXX" required>
+                <label class="form-label">Emergency Type</label>
+                <select id="emergency-type" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
+                  <option value="Accident / Hit & Run">Accident / Hit & Run</option>
+                  <option value="Severe Injury">Severe Injury</option>
+                  <option value="Sickness / Disease">Sickness / Disease</option>
+                  <option value="Abuse / Cruelty">Abuse / Cruelty</option>
+                  <option value="Stray / Trapped">Stray / Trapped</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+              <div class="form-group">
+                <label class="form-label">Severity Level</label>
+                <select id="severity" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Reporter Contact Number</label>
+                <input type="text" id="contact-number" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" placeholder="+91 XXXXX XXXXX" required>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
               <label class="form-label">Location Address Description</label>
-              <input type="text" id="location-name" class="form-control" placeholder="E.g., Near Hebbal metro pillar 12" required>
+              <input type="text" id="location-name" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" placeholder="E.g., Near Hebbal metro pillar 12" required>
             </div>
 
             <!-- Coordinate Selectors Map integration -->
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom: 16px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                 <label class="form-label" style="margin:0;">Select Pin Location on Map</label>
-                <strong id="location-coords-display" style="font-size:0.85rem; color:var(--primary);">No location selected</strong>
+                <strong id="location-coords-display" style="font-size:0.85rem; color:var(--primary);">Detecting coordinates...</strong>
               </div>
               
-              <div class="map-wrapper" style="height: 300px; margin-bottom: 16px;">
+              <div class="map-wrapper" style="height: 300px; margin-bottom: 16px; border-radius: 12px; overflow: hidden; border: 1px solid var(--input-border);">
                 <div id="report-map" style="width: 100%; height: 100%;"></div>
               </div>
               
@@ -105,21 +147,21 @@
             </div>
 
             <!-- Upload Animal image -->
-            <div class="form-group">
-              <label class="form-label">Upload Animal Image</label>
-              <input type="file" id="report-image-input" class="form-control" accept="image/*" required>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label">Upload Animal Image (Optional)</label>
+              <input type="file" id="report-image-input" class="form-control" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" accept="image/*">
               
               <!-- Image preview box -->
               <div id="upload-preview-container" style="display: none; margin-top: 16px;">
-                <div class="scanner-container">
-                  <img id="report-image-preview" class="scanner-image" src="" alt="Scan Preview">
+                <div class="scanner-container" style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--input-border);">
+                  <img id="report-image-preview" class="scanner-image" style="width: 100%; height: auto; max-height: 300px; object-fit: cover;" src="" alt="Scan Preview">
                 </div>
               </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom: 16px;">
               <label class="form-label">Incident Description & Animal Condition</label>
-              <textarea id="description" class="form-control" rows="4" placeholder="Briefly describe the animal's condition (e.g., bleeding leg, limping slowly, hit by car...)" required></textarea>
+              <textarea id="description" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" rows="4" placeholder="Briefly describe the animal's condition (e.g., bleeding leg, limping slowly, hit by car...)" required></textarea>
             </div>
 
             <button type="submit" id="report-submit-btn" class="btn btn-primary" style="width: 100%; padding: 14px 24px; font-size:1.1rem; margin-top:16px;">

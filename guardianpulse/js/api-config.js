@@ -6,8 +6,9 @@ const GPApiConfig = {
     chat: "/api/chat"
   },
 
-  // Fallback production URL (uses CORS-enabled Netlify Functions)
-  productionBaseUrl: "https://resqpaws.netlify.app",
+  // Fallback production URL (uses CORS-enabled Cloudflare Worker)
+  productionBaseUrl: "https://soft-sun-dafe.srikanthbonangi3030.workers.dev",
+
 
   // Local development backend URL
   localBaseUrl: "http://127.0.0.1:8000",

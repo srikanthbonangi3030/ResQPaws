@@ -115,7 +115,7 @@ exports.handler = async function(event, context) {
 
 function callGemini(apiKey, payload) {
   return new Promise((resolve, reject) => {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
     const reqData = JSON.stringify(payload);
     
     const options = {
