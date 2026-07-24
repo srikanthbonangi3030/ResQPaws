@@ -226,7 +226,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           formData.append("image", imageInput.files[0]);
         }
 
-        const response = await fetch("/api/reports", {
+        const endpointUrl = await window.GPApiConfig.resolveEndpoint("reports");
+        const response = await fetch(endpointUrl, {
           method: "POST",
           body: formData
         });
