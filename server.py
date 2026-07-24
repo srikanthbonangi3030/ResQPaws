@@ -78,27 +78,37 @@ with app.app_context():
 # Helper function to fetch Google Places Nearby Search
 def fetch_nearby_places(lat, lng, radius, keyword, api_key):
     url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={lat},{lng}&radius={radius}&keyword={urllib.parse.quote(keyword)}&key={api_key}"
+    print(f"GOOGLE PLACES REQUEST: {url.replace(api_key, 'API_KEY_HIDDEN')}")
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'resQpaws API Agent'})
         with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.loads(response.read().decode('utf-8'))
-            return data.get("results", [])
+            res_body = response.read().decode('utf-8')
+            data = json.loads(res_body)
+            print(f"GOOGLE PLACES RESPONSE STATUS: {data.get('status')}")
+            if data.get("error_message"):
+                print(f"GOOGLE PLACES ERROR DETAIL: {data.get('error_message')}")
+            return data
     except Exception as e:
         print(f"Error fetching Google Places Nearby for keyword '{keyword}' in radius {radius}m: {e}")
-        return []
+        return {"status": "HTTP_ERROR", "results": [], "error_message": str(e)}
 
 # Helper function to fetch Google Place Details
 def fetch_place_details(place_id, api_key):
     fields = "name,formatted_address,geometry,rating,user_ratings_total,business_status,opening_hours,formatted_phone_number,international_phone_number,website,url,photos"
     url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields={fields}&key={api_key}"
+    print(f"GOOGLE PLACE DETAILS REQUEST: {url.replace(api_key, 'API_KEY_HIDDEN')}")
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'resQpaws API Agent'})
         with urllib.request.urlopen(req, timeout=5) as response:
-            data = json.loads(response.read().decode('utf-8'))
-            return data.get("result", {})
+            res_body = response.read().decode('utf-8')
+            data = json.loads(res_body)
+            print(f"GOOGLE PLACE DETAILS RESPONSE STATUS: {data.get('status')}")
+            if data.get("error_message"):
+                print(f"GOOGLE PLACE DETAILS ERROR DETAIL: {data.get('error_message')}")
+            return data
     except Exception as e:
         print(f"Error fetching Google Place Details for place_id '{place_id}': {e}")
-        return {}
+        return {"status": "HTTP_ERROR", "result": {}, "error_message": str(e)}
 
 
 # --------------------- BACKEND APIS ---------------------
@@ -183,9 +193,11 @@ def submit_report():
         if not api_key:
             return jsonify({
                 "success": True,
-                "message": "Emergency report submitted successfully, but Google Places API key is missing on the server.",
+                "message": "Emergency report saved. Google Places API key is missing on the server.",
                 "report": report.to_dict(),
-                "nearby_hospitals": []
+                "nearby_hospitals": [],
+                "google_places_status": "MISSING_KEY",
+                "google_places_error": "API key is not configured on the server."
             }), 201
 
         # Search queries
@@ -194,6 +206,8 @@ def submit_report():
         # Progressive search radii: 5km, 10km, 20km, 30km, 50km
         radii = [5000, 10000, 20000, 30000, 50000]
         places_map = {}
+        last_api_status = "OK"
+        last_api_error = None
 
         # Search progressively in parallel for each radius
         for r in radii:
@@ -201,7 +215,13 @@ def submit_report():
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                 futures = {executor.submit(fetch_nearby_places, latitude, longitude, r, kw, api_key): kw for kw in keywords}
                 for fut in concurrent.futures.as_completed(futures):
-                    results = fut.result()
+                    data = fut.result()
+                    status = data.get("status", "OK")
+                    if status not in ["OK", "ZERO_RESULTS"]:
+                        last_api_status = status
+                        last_api_error = data.get("error_message", "Unknown error")
+                    
+                    results = data.get("results", [])
                     for p in results:
                         p_id = p.get("place_id")
                         if p_id and p_id not in places_map:
@@ -210,6 +230,17 @@ def submit_report():
             # If we've gathered at least 5 clinics, stop expanding radius
             if len(places_map) >= 5:
                 break
+
+        # Check if Places query failed completely
+        if len(places_map) == 0 and last_api_status not in ["OK", "ZERO_RESULTS"]:
+            return jsonify({
+                "success": True,
+                "message": "Emergency report saved, but Google Places query failed.",
+                "report": report.to_dict(),
+                "nearby_hospitals": [],
+                "google_places_status": last_api_status,
+                "google_places_error": last_api_error
+            }), 201
 
         # Filter out permanently closed, coordinates validation, and compute Haversine distance
         valid_hospitals = []
@@ -246,7 +277,8 @@ def submit_report():
             futures = {executor.submit(fetch_place_details, h.get("place_id"), api_key): h for h in top_5}
             for fut in concurrent.futures.as_completed(futures):
                 original_h = futures[fut]
-                details = fut.result()
+                data = fut.result()
+                details = data.get("result", {})
                 if not details:
                     details = original_h
                 
@@ -298,7 +330,8 @@ def submit_report():
             "success": True,
             "message": "Emergency report submitted successfully.",
             "report": report.to_dict(),
-            "nearby_hospitals": detailed_hospitals
+            "nearby_hospitals": detailed_hospitals,
+            "google_places_status": "OK"
         }), 201
 
     except Exception as e:

@@ -244,22 +244,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (statusText) statusText.textContent = "Step 3: Querying Google Places API for nearby veterinary clinics (5km -> 50km radii)...";
         
         const top5Hospitals = result.nearby_hospitals;
+        const placesStatus = result.google_places_status || "OK";
+        const placesError = result.google_places_error || "";
+
         await new Promise(resolve => setTimeout(resolve, 800));
-        updateProgressStep("step-places", "success", `Hospitals Retrieved: Found ${top5Hospitals.length} active listings`);
-
-        // Step 4: Calculate distances (Haversine sorting)
-        updateProgressStep("step-haversine", "active");
-        if (statusText) statusText.textContent = "Step 4: Executing Haversine distance calculations and ranking opening statuses...";
-        await new Promise(resolve => setTimeout(resolve, 600));
-        updateProgressStep("step-haversine", "success");
-
-        // Step 5: Finalize
-        if (top5Hospitals.length === 0) {
-          updateProgressStep("step-done", "error", "No veterinary hospitals found within 50 km.");
-          if (statusText) statusText.textContent = "Google Places search completed. No clinics found within 50km.";
+        
+        if (placesStatus !== "OK" && placesStatus !== "ZERO_RESULTS") {
+          updateProgressStep("step-places", "error", `Places API Error: ${placesStatus}`);
+          updateProgressStep("step-haversine", "error", "Calculation aborted due to API failure");
+          updateProgressStep("step-done", "error", "Unable to retrieve nearby veterinary hospitals.");
         } else {
-          updateProgressStep("step-done", "success", `Found ${top5Hospitals.length} nearby veterinary hospitals.`);
-          if (statusText) statusText.textContent = "Real-time clinic routing finalized successfully!";
+          updateProgressStep("step-places", "success", `Hospitals Retrieved: Found ${top5Hospitals.length} active listings`);
+          
+          // Step 4: Calculate distances (Haversine sorting)
+          updateProgressStep("step-haversine", "active");
+          if (statusText) statusText.textContent = "Step 4: Executing Haversine distance calculations and ranking opening statuses...";
+          await new Promise(resolve => setTimeout(resolve, 600));
+          updateProgressStep("step-haversine", "success");
+
+          // Step 5: Finalize
+          if (top5Hospitals.length === 0) {
+            updateProgressStep("step-done", "error", "No nearby veterinary hospitals were found.");
+            if (statusText) statusText.textContent = "Google Places search completed. No clinics found within 50km.";
+          } else {
+            updateProgressStep("step-done", "success", `Found ${top5Hospitals.length} nearby veterinary hospitals.`);
+            if (statusText) statusText.textContent = "Real-time clinic routing finalized successfully!";
+          }
         }
 
         // Delay to let the user see the completed checklist
@@ -275,12 +285,22 @@ document.addEventListener("DOMContentLoaded", async () => {
           const hospitalsGrid = document.getElementById("hospitals-grid");
           hospitalsGrid.innerHTML = "";
 
-          if (top5Hospitals.length === 0) {
+          if (placesStatus !== "OK" && placesStatus !== "ZERO_RESULTS") {
             hospitalsGrid.innerHTML = `
-              <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+              <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 40px; border-left: 4px solid var(--danger);">
                 <span style="font-size: 3rem; display: block; margin-bottom: 12px;">⚠️</span>
-                <h4>No clinics found within 50 km</h4>
-                <p style="color: var(--text-muted);">Please try contacting the main हेल्पलाइन line at +91 98765 43210 for immediate phone assistance.</p>
+                <h4 style="color: var(--danger); font-size: 1.35rem; margin-bottom: 8px;">Unable to retrieve nearby veterinary hospitals.</h4>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">There was an error communicating with the Google Places API (Status: <strong>${placesStatus}</strong>).${placesError ? '<br>Detail: ' + placesError : ''}</p>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 12px;">Please contact our helpline at +91 98765 43210 for emergency phone assistance.</p>
+              </div>
+            `;
+          } else if (top5Hospitals.length === 0) {
+            hospitalsGrid.innerHTML = `
+              <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 40px; border-left: 4px solid var(--warning);">
+                <span style="font-size: 3rem; display: block; margin-bottom: 12px;">⚠️</span>
+                <h4 style="font-size: 1.35rem; margin-bottom: 8px;">No nearby veterinary hospitals were found.</h4>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">No veterinary hospitals exist within 50 km of your selected coordinates on Google Maps.</p>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 12px;">Please contact our helpline at +91 98765 43210 for emergency phone assistance.</p>
               </div>
             `;
           } else {
@@ -293,15 +313,14 @@ document.addEventListener("DOMContentLoaded", async () => {
               card.style.flexDirection = "column";
 
               const stars = "⭐".repeat(Math.round(h.rating)) || "No Rating";
-              const openBadgeClass = h.open_status === "Open Now" ? "badge-success" : "badge-critical";
               const openBadgeStyle = h.open_status === "Open Now" ? "background-color: var(--success); color: white;" : "background-color: var(--danger); color: white;";
               
               const phoneBtn = h.phone_number 
                 ? `<a href="tel:${h.phone_number}" class="btn btn-outline btn-sm" style="font-size: 0.85rem; padding: 10px; border-radius: 8px; display: flex; justify-content: center; align-items: center; gap: 6px;">📞 Call Hospital</a>`
-                : `<button class="btn btn-outline btn-sm" style="font-size: 0.85rem; padding: 10px; border-radius: 8px; display: flex; justify-content: center; align-items: center; gap: 6px;" disabled>📞 No Phone</button>`;
+                : `<button class="btn btn-outline btn-sm" style="font-size: 0.85rem; padding: 10px; border-radius: 8px; display: flex; justify-content: center; align-items: center; gap: 6px;" disabled>📞 Call Hospital</button>`;
 
               const websiteBtn = h.website
-                ? `<a href="${h.website}" target="_blank" class="btn btn-outline btn-sm" style="font-size: 0.85rem; padding: 10px; border-radius: 8px; display: flex; justify-content: center; align-items: center; gap: 6px; border-color: var(--primary); color: var(--primary);">🌐 Open Website</a>`
+                ? `<a href="${h.website}" target="_blank" class="btn btn-outline btn-sm" style="font-size: 0.85rem; padding: 10px; border-radius: 8px; display: flex; justify-content: center; align-items: center; gap: 6px; border-color: var(--primary); color: var(--primary);">🌐 Website</a>`
                 : "";
 
               card.innerHTML = `
@@ -327,7 +346,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                     <div style="display: grid; grid-template-columns: ${h.website ? '1fr 1fr' : '1fr'}; gap: 12px;">
                       ${websiteBtn}
-                      <a href="${h.google_maps_url}" target="_blank" class="btn btn-outline btn-sm" style="font-size: 0.85rem; padding: 10px; border-radius: 8px; display: flex; justify-content: center; align-items: center; gap: 6px; justify-content: center;">⭐ Open in Maps</a>
+                      <a href="${h.google_maps_url}" target="_blank" class="btn btn-outline btn-sm" style="font-size: 0.85rem; padding: 10px; border-radius: 8px; display: flex; justify-content: center; align-items: center; gap: 6px; justify-content: center;">⭐ Open in Google Maps</a>
                     </div>
                   </div>
                 </div>
@@ -343,39 +362,43 @@ document.addEventListener("DOMContentLoaded", async () => {
           // Initialize Interactive success map showing user (blue) and clinics (red)
           const successMapElement = document.getElementById("success-map");
           if (successMapElement && top5Hospitals.length > 0) {
-            const successMap = L.map("success-map").setView([lat, lng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(successMap);
+            try {
+              const successMap = L.map("success-map").setView([lat, lng], 13);
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              }).addTo(successMap);
 
-            // User location marker (Blue Circle Pin)
-            const blueIcon = L.divIcon({
-              html: `<div style="background-color: #3B82F6; border: 2.5px solid white; border-radius: 50%; width: 24px; height: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.8rem;">📍</div>`,
-              className: 'user-location-marker',
-              iconSize: [24, 24],
-              iconAnchor: [12, 12]
-            });
-            L.marker([lat, lng], { icon: blueIcon })
-              .bindPopup("<strong>Your Incident Coordinates</strong>")
-              .addTo(successMap);
-
-            // Clinic markers (Red pins)
-            const bounds = [[lat, lng]];
-            top5Hospitals.forEach(h => {
-              const redIcon = L.divIcon({
-                html: `<div style="background-color: #EF4444; border: 2px solid white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3); color: white; font-size: 1.1rem;">🏥</div>`,
-                className: 'clinic-marker-pin',
-                iconSize: [32, 32],
-                iconAnchor: [16, 16]
+              // User location marker (Blue Circle Pin)
+              const blueIcon = L.divIcon({
+                html: `<div style="background-color: #3B82F6; border: 2.5px solid white; border-radius: 50%; width: 24px; height: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.8rem;">📍</div>`,
+                className: 'user-location-marker',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
               });
-              L.marker([h.latitude, h.longitude], { icon: redIcon })
-                .bindPopup(`<strong>${h.name}</strong><br>Distance: ${h.distance_km} km<br>${h.address}`)
+              L.marker([lat, lng], { icon: blueIcon })
+                .bindPopup("<strong>Your Incident Coordinates</strong>")
                 .addTo(successMap);
-              bounds.push([h.latitude, h.longitude]);
-            });
 
-            // Auto-adjust zoom/bounds to fit all markers nicely
-            successMap.fitBounds(bounds, { padding: [40, 40] });
+              // Clinic markers (Red pins)
+              const bounds = [[lat, lng]];
+              top5Hospitals.forEach(h => {
+                const redIcon = L.divIcon({
+                  html: `<div style="background-color: #EF4444; border: 2px solid white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3); color: white; font-size: 1.1rem;">🏥</div>`,
+                  className: 'clinic-marker-pin',
+                  iconSize: [32, 32],
+                  iconAnchor: [16, 16]
+                });
+                L.marker([h.latitude, h.longitude], { icon: redIcon })
+                  .bindPopup(`<strong>${h.name}</strong><br>Distance: ${h.distance_km} km<br>${h.address}`)
+                  .addTo(successMap);
+                bounds.push([h.latitude, h.longitude]);
+              });
+
+              // Auto-adjust zoom/bounds to fit all markers nicely
+              successMap.fitBounds(bounds, { padding: [40, 40] });
+            } catch (mapErr) {
+              console.error("Leaflet success map rendering failed:", mapErr);
+            }
           }
 
         }, 1200);
