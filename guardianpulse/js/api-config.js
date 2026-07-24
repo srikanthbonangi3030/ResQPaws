@@ -7,7 +7,7 @@ const GPApiConfig = {
   },
 
   // Fallback production URL (uses CORS-enabled Cloudflare Worker)
-  productionBaseUrl: "https://soft-sun-dafe.srikanthbonangi3030.workers.dev",
+  productionBaseUrl: "https://resqpaws-backend-8ub1.onrender.com",
 
 
   // Local development backend URL
