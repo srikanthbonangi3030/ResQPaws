@@ -436,9 +436,9 @@ def chat():
         return jsonify({"success": True}), 200
     """Gemini API chat helper proxy."""
     try:
-        request_data = request.json
+        request_data = request.get_json(silent=True)
         if not request_data:
-            return jsonify({"error": "No JSON payload provided"}), 400
+            return jsonify({"success": False, "error": "No JSON payload provided or Content-Type is not application/json"}), 400
             
         user_msg = request_data.get("message", "")
         history = request_data.get("history", [])
@@ -455,7 +455,7 @@ def chat():
                             break
         
         if not api_key:
-            return jsonify({"error": "Gemini API key is not configured on the server."}), 500
+            return jsonify({"success": False, "error": "Gemini API key is not configured on the server."}), 500
 
         # Build contents from history
         contents = []
@@ -492,7 +492,7 @@ def chat():
         )
 
         try:
-            with urllib.request.urlopen(req) as response:
+            with urllib.request.urlopen(req, timeout=15) as response:
                 res_body = json.loads(response.read().decode('utf-8'))
                 candidates = res_body.get("candidates", [])
                 reply = ""
@@ -504,7 +504,7 @@ def chat():
                 if not reply:
                     reply = "I'm sorry, I couldn't generate a response at this moment."
 
-                return jsonify({"reply": reply}), 200
+                return jsonify({"success": True, "response": reply}), 200
 
         except urllib.error.HTTPError as e:
             try:
@@ -514,10 +514,14 @@ def chat():
                 detailed_err = err_data.get("error", {}).get("message", e.reason)
             except:
                 detailed_err = e.reason
-            return jsonify({"error": f"Gemini API Error: {detailed_err}"}), e.code
+            return jsonify({"success": False, "error": f"Gemini API Error: {detailed_err}"}), e.code
+        except urllib.error.URLError as url_err:
+            print("Gemini API Connection Error:", str(url_err))
+            return jsonify({"success": False, "error": f"Connection to Gemini API failed: {str(url_err.reason)}"}), 504
 
     except Exception as ex:
-        return jsonify({"error": str(ex)}), 400
+        print("Internal Chatbot Exception:", str(ex))
+        return jsonify({"success": False, "error": f"Internal Server Error: {str(ex)}"}), 500
 
 
 # --------------------- STATIC FILE SERVING ---------------------

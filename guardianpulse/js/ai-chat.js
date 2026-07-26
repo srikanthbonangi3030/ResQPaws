@@ -264,6 +264,13 @@ const GPaichat = {
     this.messagesList.appendChild(writingMsg);
     this.scrollToBottom();
 
+    // Early offline check
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      writingMsg.remove();
+      this.addMessage(`⚠️ <strong>Offline Mode:</strong> You appear to be offline. Please verify your network connection.`, "assistant");
+      return;
+    }
+
     const maxRetries = 3;
     let attempt = 0;
     let response = null;
@@ -320,16 +327,43 @@ const GPaichat = {
 
     writingMsg.remove();
 
-    // Analyze non-OK responses
-    if (!response.ok) {
-      let errData = {};
-      try {
-        errData = await response.json();
-      } catch (e) {}
+    if (!response) {
+      this.addMessage(`⚠️ <strong>Network Error:</strong> Received an empty response from the server.`, "assistant");
+      return;
+    }
 
-      const errMsg = errData.error || `Server error (${response.status})`;
+    // 1. Read response as text to detect HTML page redirects and avoid JSON parse crashes
+    let rawText = "";
+    try {
+      rawText = await response.text();
+    } catch (textReadErr) {
+      this.addMessage(`⚠️ <strong>Connection Error:</strong> Failed to read response from server.`, "assistant");
+      window.GPApiConfig.logError(resolvedUrl, "PayloadReadError", textReadErr, attempt);
+      return;
+    }
+
+    // 2. Detect HTML redirect pages (e.g. Netlify/Render 404 fallback page)
+    const isHtml = /<!DOCTYPE html>|<html|<\/html>/i.test(rawText);
+    if (isHtml) {
+      this.addMessage(`⚠️ <strong>Parsing Error:</strong> The server returned an HTML page instead of JSON. This typically indicates a 404 Not Found or a routing configuration error on the hosting provider.`, "assistant");
+      window.GPApiConfig.logError(resolvedUrl, "HtmlResponseError", new Error("HTML response received instead of JSON"), attempt);
+      return;
+    }
+
+    // 3. Safe JSON parsing
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (jsonParseErr) {
+      this.addMessage(`⚠️ <strong>Parsing Error:</strong> Received invalid response format from the server.`, "assistant");
+      window.GPApiConfig.logError(resolvedUrl, "ParseError", jsonParseErr, attempt);
+      return;
+    }
+
+    // 4. Validate HTTP status code and response success property
+    if (!response.ok || (data && data.success === false)) {
+      const errMsg = (data && data.error) || `Server returned error status (${response.status})`;
       
-      // Categorize errors
       if (response.status === 405) {
         this.addMessage(`⚠️ <strong>CORS / Method Error:</strong> The server returned Method Not Allowed (405). If running locally, make sure you start <code>server.py</code> instead of a generic static server.`, "assistant");
       } else if (errMsg.includes("API key")) {
@@ -344,21 +378,20 @@ const GPaichat = {
       return;
     }
 
-    try {
-      const data = await response.json();
-      const reply = data.reply;
-
-      // Update cached active endpoint since the request succeeded
-      window.GPApiConfig.updateCachedEndpoint(resolvedUrl);
-
-      // Add reply to UI and history
-      this.addMessage(reply, "assistant");
-      this.history.push({ role: "assistant", text: reply });
-
-    } catch (err) {
-      this.addMessage(`⚠️ <strong>Parsing Error:</strong> Received invalid response format from the server.`, "assistant");
-      window.GPApiConfig.logError(resolvedUrl, "ParseError", err, attempt);
+    // 5. Success Path: Extract response text (supporting both data.response and data.reply for backward compatibility)
+    const reply = data.response || data.reply;
+    if (!reply) {
+      this.addMessage(`⚠️ <strong>Parsing Error:</strong> Chat response text was empty or missing from the server payload.`, "assistant");
+      window.GPApiConfig.logError(resolvedUrl, "EmptyResponseError", new Error("No response field found"), attempt);
+      return;
     }
+
+    // Update cached active endpoint since the request succeeded
+    window.GPApiConfig.updateCachedEndpoint(resolvedUrl);
+
+    // Add reply to UI and history
+    this.addMessage(reply, "assistant");
+    this.history.push({ role: "assistant", text: reply });
   }
 };
 
