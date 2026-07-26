@@ -110,12 +110,35 @@ def fetch_place_details(place_id, api_key):
         print(f"Error fetching Google Place Details for place_id '{place_id}': {e}")
         return {"status": "HTTP_ERROR", "result": {}, "error_message": str(e)}
 
+# Helper function to fetch OpenStreetMap Overpass veterinary places
+def fetch_osm_places(lat, lng, radius):
+    query = f"""[out:json];(node["amenity"="veterinary"](around:{radius},{lat},{lng});way["amenity"="veterinary"](around:{radius},{lat},{lng});relation["amenity"="veterinary"](around:{radius},{lat},{lng}););out center;"""
+    url = f"https://overpass-api.de/api/interpreter?data={urllib.parse.quote(query)}"
+    print(f"OSM OVERPASS REQUEST: {url}")
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={
+                'User-Agent': 'resQPawsAnimalRescueApp/1.0 (emergency-dev@resqpaws.org)',
+                'Referer': 'https://resqpaws.netlify.app/'
+            }
+        )
+        with urllib.request.urlopen(req, timeout=8) as response:
+            res_body = response.read().decode('utf-8')
+            data = json.loads(res_body)
+            elements = data.get("elements", [])
+            print(f"OSM OVERPASS RESPONSE: Found {len(elements)} elements")
+            return elements
+    except Exception as e:
+        print(f"Error fetching OpenStreetMap Overpass for lat={lat}, lng={lng}, radius={radius}: {e}")
+        return []
+
 
 # --------------------- BACKEND APIS ---------------------
 
 @app.route('/api/reports', methods=['POST'])
 def submit_report():
-    """Accept and save an Emergency Animal Report, then find the nearest real-time clinics from Google Places API."""
+    """Accept and save an Emergency Animal Report, then find the nearest real-time clinics from Google Places API (or OpenStreetMap Fallback)."""
     try:
         # Support both form data (with image file) and JSON payloads
         if request.content_type and 'multipart/form-data' in request.content_type:
@@ -190,59 +213,83 @@ def submit_report():
                             api_key = line.split("=", 1)[1].strip()
                             break
 
-        if not api_key:
-            return jsonify({
-                "success": True,
-                "message": "Emergency report saved. Google Places API key is missing on the server.",
-                "report": report.to_dict(),
-                "nearby_hospitals": [],
-                "google_places_status": "MISSING_KEY",
-                "google_places_error": "API key is not configured on the server."
-            }), 201
-
-        # Search queries
-        keywords = ["Veterinary Hospital", "Veterinary Clinic", "Veterinary Care", "Animal Hospital", "Pet Hospital"]
-        
-        # Progressive search radii: 5km, 10km, 20km, 30km, 50km
-        radii = [5000, 10000, 20000, 30000, 50000]
         places_map = {}
         last_api_status = "OK"
         last_api_error = None
+        google_places_success = False
 
-        # Search progressively in parallel for each radius
-        for r in radii:
-            print(f"Searching veterinary clinics in {r/1000}km radius...")
-            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                futures = {executor.submit(fetch_nearby_places, latitude, longitude, r, kw, api_key): kw for kw in keywords}
-                for fut in concurrent.futures.as_completed(futures):
-                    data = fut.result()
-                    status = data.get("status", "OK")
-                    if status not in ["OK", "ZERO_RESULTS"]:
-                        last_api_status = status
-                        last_api_error = data.get("error_message", "Unknown error")
-                    
-                    results = data.get("results", [])
-                    for p in results:
-                        p_id = p.get("place_id")
-                        if p_id and p_id not in places_map:
-                            places_map[p_id] = p
+        if api_key:
+            # Search queries
+            keywords = ["Veterinary Hospital", "Veterinary Clinic", "Veterinary Care", "Animal Hospital", "Pet Hospital"]
+            radii = [5000, 10000, 20000, 30000, 50000]
+
+            # Search progressively in parallel for each radius
+            for r in radii:
+                print(f"Searching Google Places veterinary clinics in {r/1000}km radius...")
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                    futures = {executor.submit(fetch_nearby_places, latitude, longitude, r, kw, api_key): kw for kw in keywords}
+                    for fut in concurrent.futures.as_completed(futures):
+                        data = fut.result()
+                        status = data.get("status", "OK")
+                        if status not in ["OK", "ZERO_RESULTS"]:
+                            last_api_status = status
+                            last_api_error = data.get("error_message", "Unknown error")
+                        else:
+                            google_places_success = True
+                        
+                        results = data.get("results", [])
+                        for p in results:
+                            p_id = p.get("place_id")
+                            if p_id and p_id not in places_map:
+                                places_map[p_id] = p
+                
+                # If we've gathered at least 5 clinics, stop expanding radius
+                if len(places_map) >= 5:
+                    break
+
+        # 🌟 OpenStreetMap Fallback Gateway (Triggers if API key is invalid/denied, or zero Google results returned)
+        osm_fallback_used = False
+        if not google_places_success or len(places_map) == 0:
+            print("Google Places query unavailable or empty. Triggering OpenStreetMap Overpass fallback query...")
+            osm_fallback_used = True
             
-            # If we've gathered at least 5 clinics, stop expanding radius
-            if len(places_map) >= 5:
-                break
+            radii = [5000, 10000, 20000, 30000, 50000]
+            for r in radii:
+                osm_elements = fetch_osm_places(latitude, longitude, r)
+                for el in osm_elements:
+                    p_id = el.get("id")
+                    if p_id and p_id not in places_map:
+                        tags = el.get("tags", {})
+                        h_lat = el.get("lat") or el.get("center", {}).get("lat")
+                        h_lng = el.get("lon") or el.get("center", {}).get("lon")
+                        if h_lat is None or h_lng is None:
+                            continue
+                            
+                        # Build address
+                        addr_parts = []
+                        for k in ["addr:housenumber", "addr:street", "addr:suburb", "addr:city"]:
+                            v = tags.get(k)
+                            if v:
+                                addr_parts.append(v)
+                        addr = ", ".join(addr_parts) if addr_parts else tags.get("addr:full", "Address Unavailable")
+                        
+                        places_map[p_id] = {
+                            "place_id": f"osm_{p_id}",
+                            "name": tags.get("name", "Veterinary Clinic"),
+                            "vicinity": addr,
+                            "geometry": {"location": {"lat": h_lat, "lng": h_lng}},
+                            "business_status": "OPERATIONAL",
+                            "rating": 0.0,
+                            "user_ratings_total": 0,
+                            "opening_hours": {"open_now": True},
+                            "phone_number": tags.get("phone") or tags.get("contact:phone") or "",
+                            "website": tags.get("website") or tags.get("contact:website") or "",
+                            "is_osm": True
+                        }
+                if len(places_map) >= 5:
+                    break
 
-        # Check if Places query failed completely
-        if len(places_map) == 0 and last_api_status not in ["OK", "ZERO_RESULTS"]:
-            return jsonify({
-                "success": True,
-                "message": "Emergency report saved, but Google Places query failed.",
-                "report": report.to_dict(),
-                "nearby_hospitals": [],
-                "google_places_status": last_api_status,
-                "google_places_error": last_api_error
-            }), 201
-
-        # Filter out permanently closed, coordinates validation, and compute Haversine distance
+        # Filter out closed & validate coords
         valid_hospitals = []
         for p_id, p in places_map.items():
             status = p.get("business_status", "")
@@ -271,54 +318,79 @@ def submit_report():
         valid_hospitals.sort(key=sort_key)
         top_5 = valid_hospitals[:5]
 
-        # Fetch Place Details in parallel for the top 5 places to retrieve complete website and phone contacts
+        # Fetch details for Google and OSM places
         detailed_hospitals = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            futures = {executor.submit(fetch_place_details, h.get("place_id"), api_key): h for h in top_5}
-            for fut in concurrent.futures.as_completed(futures):
-                original_h = futures[fut]
-                data = fut.result()
-                details = data.get("result", {})
-                if not details:
-                    details = original_h
-                
-                # Format Photo URL
-                photos = details.get("photos", [])
-                photo_url = None
-                if photos:
-                    photo_ref = photos[0].get("photo_reference")
-                    if photo_ref:
-                        photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_ref}&key={api_key}"
-                
-                loc = details.get("geometry", {}).get("location", {})
-                h_lat = loc.get("lat", original_h.get("geometry", {}).get("location", {}).get("lat", 0.0))
-                h_lng = loc.get("lng", original_h.get("geometry", {}).get("location", {}).get("lng", 0.0))
+        google_top_5 = [h for h in top_5 if not h.get("is_osm")]
+        osm_top_5 = [h for h in top_5 if h.get("is_osm")]
 
-                open_now = details.get("opening_hours", {}).get("open_now")
-                open_status = "Open Now" if open_now is True else ("Closed" if open_now is False else "Unknown")
+        if google_top_5:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                futures = {executor.submit(fetch_place_details, h.get("place_id"), api_key): h for h in google_top_5}
+                for fut in concurrent.futures.as_completed(futures):
+                    original_h = futures[fut]
+                    data = fut.result()
+                    details = data.get("result", {})
+                    if not details:
+                        details = original_h
+                    
+                    # Format Photo URL
+                    photos = details.get("photos", [])
+                    photo_url = None
+                    if photos:
+                        photo_ref = photos[0].get("photo_reference")
+                        if photo_ref:
+                            photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={photo_ref}&key={api_key}"
+                    
+                    loc = details.get("geometry", {}).get("location", {})
+                    h_lat = loc.get("lat", original_h.get("geometry", {}).get("location", {}).get("lat", 0.0))
+                    h_lng = loc.get("lng", original_h.get("geometry", {}).get("location", {}).get("lng", 0.0))
 
-                h_info = {
-                    "place_id": original_h.get("place_id"),
-                    "name": details.get("name", original_h.get("name", "Veterinary Hospital")),
-                    "address": details.get("formatted_address", original_h.get("vicinity", "Address Unavailable")),
-                    "latitude": h_lat,
-                    "longitude": h_lng,
-                    "distance_km": original_h.get("distance_km"),
-                    "rating": details.get("rating", original_h.get("rating", 0.0)),
-                    "user_ratings_total": details.get("user_ratings_total", original_h.get("user_ratings_total", 0)),
-                    "business_status": details.get("business_status", original_h.get("business_status", "OPERATIONAL")),
-                    "open_now": open_now,
-                    "open_status": open_status,
-                    "phone_number": details.get("formatted_phone_number", ""),
-                    "international_phone_number": details.get("international_phone_number", ""),
-                    "website": details.get("website", ""),
-                    "google_maps_url": details.get("url", f"https://www.google.com/maps/place/?q=place_id:{original_h.get('place_id')}"),
-                    "photo_url": photo_url,
-                    "opening_hours": details.get("opening_hours", {}).get("weekday_text", [])
-                }
-                detailed_hospitals.append(h_info)
+                    open_now = details.get("opening_hours", {}).get("open_now")
+                    open_status = "Open Now" if open_now is True else ("Closed" if open_now is False else "Unknown")
 
-        # Sort the final results to preserve exact sorting order
+                    h_info = {
+                        "place_id": original_h.get("place_id"),
+                        "name": details.get("name", original_h.get("name", "Veterinary Hospital")),
+                        "address": details.get("formatted_address", original_h.get("vicinity", "Address Unavailable")),
+                        "latitude": h_lat,
+                        "longitude": h_lng,
+                        "distance_km": original_h.get("distance_km"),
+                        "rating": details.get("rating", original_h.get("rating", 0.0)),
+                        "user_ratings_total": details.get("user_ratings_total", original_h.get("user_ratings_total", 0)),
+                        "business_status": details.get("business_status", original_h.get("business_status", "OPERATIONAL")),
+                        "open_now": open_now,
+                        "open_status": open_status,
+                        "phone_number": details.get("formatted_phone_number", ""),
+                        "international_phone_number": details.get("international_phone_number", ""),
+                        "website": details.get("website", ""),
+                        "google_maps_url": details.get("url", f"https://www.google.com/maps/place/?q=place_id:{original_h.get('place_id')}"),
+                        "photo_url": photo_url,
+                        "opening_hours": details.get("opening_hours", {}).get("weekday_text", [])
+                    }
+                    detailed_hospitals.append(h_info)
+
+        for h in osm_top_5:
+            detailed_hospitals.append({
+                "place_id": h.get("place_id"),
+                "name": h.get("name"),
+                "address": h.get("vicinity"),
+                "latitude": h.get("geometry", {}).get("location", {}).get("lat"),
+                "longitude": h.get("geometry", {}).get("location", {}).get("lng"),
+                "distance_km": h.get("distance_km"),
+                "rating": 0.0,
+                "user_ratings_total": 0,
+                "business_status": "OPERATIONAL",
+                "open_now": True,
+                "open_status": "Open Now",
+                "phone_number": h.get("phone_number", ""),
+                "international_phone_number": "",
+                "website": h.get("website", ""),
+                "google_maps_url": f"https://www.google.com/maps/place/?q={h.get('geometry', {}).get('location', {}).get('lat')},{h.get('geometry', {}).get('location', {}).get('lng')}",
+                "photo_url": None,
+                "opening_hours": []
+            })
+
+        # Sort the combined results again by distance/open status
         detailed_hospitals.sort(key=lambda x: (
             x.get("distance_km", 999999.0),
             0 if x.get("open_now") is True else 1,
@@ -331,7 +403,7 @@ def submit_report():
             "message": "Emergency report submitted successfully.",
             "report": report.to_dict(),
             "nearby_hospitals": detailed_hospitals,
-            "google_places_status": "OK"
+            "google_places_status": "OK" if not osm_fallback_used else "OSM_FALLBACK"
         }), 201
 
     except Exception as e:
