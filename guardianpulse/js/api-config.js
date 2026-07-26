@@ -69,6 +69,12 @@ if (typeof window.GPApiConfig === "undefined") {
       console.error(`Retry Count: ${retryCount}`);
       console.error(`Stack Trace:`, error);
       console.groupEnd();
+    },
+
+    updateCachedEndpoint: function(url) {
+      try {
+        localStorage.setItem(this.CACHE_KEY_ENDPOINT, url);
+      } catch (e) {}
     }
   };
 }

@@ -386,8 +386,9 @@ const GPaichat = {
       return;
     }
 
-    // Update cached active endpoint since the request succeeded
-    window.GPApiConfig.updateCachedEndpoint(resolvedUrl);
+    if (window.GPApiConfig && window.GPApiConfig.updateCachedEndpoint) {
+      window.GPApiConfig.updateCachedEndpoint(resolvedUrl);
+    }
 
     // Add reply to UI and history
     this.addMessage(reply, "assistant");
