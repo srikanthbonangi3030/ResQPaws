@@ -36,3 +36,42 @@ class EmergencyReport(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
+
+
+class Trainer(db.Model):
+    __tablename__ = 'trainers'
+    
+    id = db.Column(db.String(50), primary_key=True)  # Format: TR-YYYY-XXX
+    name = db.Column(db.String(100), nullable=False)
+    photo = db.Column(db.String(255), nullable=True)  # Profile photo path
+    specialization = db.Column(db.String(100), nullable=False)  # Dogs, Cats, Birds, etc.
+    experience = db.Column(db.Integer, nullable=False)  # Years of experience
+    certifications = db.Column(db.Text, nullable=True)
+    languages = db.Column(db.String(255), nullable=False)  # Comma-separated languages
+    location = db.Column(db.String(100), nullable=False)  # City/State
+    availability = db.Column(db.String(255), nullable=False)
+    phone = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    bio = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(50), default='Pending', nullable=False)  # Pending, Approved, Rejected
+    is_published = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "photo": self.photo,
+            "specialization": self.specialization,
+            "experience": self.experience,
+            "certifications": self.certifications,
+            "languages": self.languages,
+            "location": self.location,
+            "availability": self.availability,
+            "phone": self.phone,
+            "email": self.email,
+            "bio": self.bio,
+            "status": self.status,
+            "is_published": self.is_published,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }

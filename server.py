@@ -10,7 +10,7 @@ import concurrent.futures
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from models import db, EmergencyReport
+from models import db, EmergencyReport, Trainer
 
 PORT = 8000
 DIRECTORY = os.path.join(os.path.dirname(__file__), "guardianpulse")
@@ -426,6 +426,249 @@ def submit_report():
         db.session.rollback()
         print("Error submitting report:", str(e))
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+
+
+# --------------------- ANIMAL TRAINERS APIS ---------------------
+
+@app.route('/api/trainers/enroll', methods=['POST', 'OPTIONS'])
+def enroll_trainer():
+    if request.method == 'OPTIONS':
+        return jsonify({"success": True}), 200
+    try:
+        # Check if request has files (multipart/form-data)
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            data = request.form
+            photo_file = request.files.get('photo')
+            cert_file = request.files.get('certificates')
+        else:
+            data = request.json
+            photo_file = None
+            cert_file = None
+
+        if not data:
+            return jsonify({"success": False, "error": "No data provided"}), 400
+
+        name = data.get('name')
+        email = data.get('email')
+        phone = data.get('phone')
+        location = data.get('location') # city
+        specialization = data.get('specialization')
+        experience_str = data.get('experience')
+        availability = data.get('availability', 'Daily')
+        bio = data.get('bio', '')
+        languages = data.get('languages', 'English')
+        certifications = data.get('certifications', '')
+
+        if not name or not email or not phone or not location or not specialization or not experience_str:
+            return jsonify({"success": False, "error": "Missing required fields (name, email, phone, location, specialization, experience)"}), 400
+
+        try:
+            experience = int(experience_str)
+        except ValueError:
+            return jsonify({"success": False, "error": "Experience must be a valid number"}), 400
+
+        # Create subfolder for trainers if not exists
+        trainers_upload_dir = os.path.join(app.config['UPLOAD_FOLDER'], "trainers")
+        os.makedirs(trainers_upload_dir, exist_ok=True)
+
+        # Handle Profile Photo upload
+        photo_path = None
+        if photo_file and photo_file.filename:
+            filename = secure_filename(photo_file.filename)
+            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = f"photo_{timestamp}_{filename}"
+            save_path = os.path.join(trainers_upload_dir, filename)
+            photo_file.save(save_path)
+            photo_path = f"uploads/trainers/{filename}"
+
+        # Handle Certifications File upload (if present)
+        cert_path = None
+        if cert_file and cert_file.filename:
+            filename = secure_filename(cert_file.filename)
+            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = f"cert_{timestamp}_{filename}"
+            save_path = os.path.join(trainers_upload_dir, filename)
+            cert_file.save(save_path)
+            cert_path = f"uploads/trainers/{filename}"
+            # Append cert path to certifications list text
+            if certifications:
+                certifications += f" | File: {cert_path}"
+            else:
+                certifications = f"File: {cert_path}"
+
+        # Generate TR-YYYY-XXX ID
+        year = datetime.datetime.utcnow().year
+        prefix = f"TR-{year}-"
+        count = Trainer.query.filter(Trainer.id.like(f"{prefix}%")).count()
+        trainer_id = f"{prefix}{str(count + 1).zfill(3)}"
+
+        new_trainer = Trainer(
+            id=trainer_id,
+            name=name,
+            photo=photo_path,
+            specialization=specialization,
+            experience=experience,
+            certifications=certifications,
+            languages=languages,
+            location=location,
+            availability=availability,
+            phone=phone,
+            email=email,
+            bio=bio,
+            status='Pending',
+            is_published=False
+        )
+
+        db.session.add(new_trainer)
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Your application has been submitted successfully. After verification by the administrator, your profile may be published in the Animal Trainers section.",
+            "trainer": new_trainer.to_dict()
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error enrolling trainer:", str(e))
+        return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
+
+
+@app.route('/api/trainers', methods=['GET', 'OPTIONS'])
+def get_public_trainers():
+    if request.method == 'OPTIONS':
+        return jsonify({"success": True}), 200
+    try:
+        search = request.args.get('search', '').strip()
+        specialization = request.args.get('specialization', '').strip()
+        city = request.args.get('city', '').strip()
+
+        query = Trainer.query.filter(Trainer.status == 'Approved', Trainer.is_published == True)
+
+        if search:
+            query = query.filter(db.or_(
+                Trainer.name.like(f"%{search}%"),
+                Trainer.bio.like(f"%{search}%"),
+                Trainer.certifications.like(f"%{search}%")
+            ))
+        if specialization:
+            query = query.filter(Trainer.specialization.like(f"%{specialization}%"))
+        if city:
+            query = query.filter(Trainer.location.like(f"%{city}%"))
+
+        trainers = query.order_by(Trainer.created_at.desc()).all()
+        return jsonify({
+            "success": True,
+            "trainers": [t.to_dict() for t in trainers]
+        }), 200
+    except Exception as e:
+        print("Error fetching public trainers:", str(e))
+        return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
+
+
+@app.route('/api/admin/trainers', methods=['GET', 'OPTIONS'])
+def get_admin_trainers():
+    if request.method == 'OPTIONS':
+        return jsonify({"success": True}), 200
+    try:
+        trainers = Trainer.query.order_by(Trainer.created_at.desc()).all()
+        return jsonify({
+            "success": True,
+            "trainers": [t.to_dict() for t in trainers]
+        }), 200
+    except Exception as e:
+        print("Error fetching admin trainers:", str(e))
+        return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
+
+
+@app.route('/api/admin/trainers/<trainer_id>', methods=['PUT', 'DELETE', 'OPTIONS'])
+def manage_admin_trainer(trainer_id):
+    if request.method == 'OPTIONS':
+        return jsonify({"success": True}), 200
+    
+    trainer = Trainer.query.get(trainer_id)
+    if not trainer:
+        return jsonify({"success": False, "error": f"Trainer '{trainer_id}' not found"}), 404
+
+    if request.method == 'DELETE':
+        try:
+            db.session.delete(trainer)
+            db.session.commit()
+            return jsonify({"success": True, "message": f"Trainer '{trainer_id}' deleted successfully"}), 200
+        except Exception as e:
+            db.session.rollback()
+            print("Error deleting trainer:", str(e))
+            return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
+
+    # PUT request (Update / Approve / Reject / Publish / Unpublish)
+    try:
+        data = request.json
+        if not data:
+            # Check if multipart/form-data for updates
+            if request.content_type and 'multipart/form-data' in request.content_type:
+                data = request.form
+            else:
+                return jsonify({"success": False, "error": "No data provided"}), 400
+
+        # Update properties if provided
+        if 'name' in data: trainer.name = data['name']
+        if 'specialization' in data: trainer.specialization = data['specialization']
+        if 'experience' in data:
+            try:
+                trainer.experience = int(data['experience'])
+            except ValueError:
+                return jsonify({"success": False, "error": "Experience must be a valid number"}), 400
+        if 'certifications' in data: trainer.certifications = data['certifications']
+        if 'languages' in data: trainer.languages = data['languages']
+        if 'location' in data: trainer.location = data['location']
+        if 'availability' in data: trainer.availability = data['availability']
+        if 'phone' in data: trainer.phone = data['phone']
+        if 'email' in data: trainer.email = data['email']
+        if 'bio' in data: trainer.bio = data['bio']
+        if 'status' in data: 
+            status = data['status']
+            if status in ['Pending', 'Approved', 'Rejected']:
+                trainer.status = status
+                # If rejected, unpublish automatically as safety precaution
+                if status == 'Rejected':
+                    trainer.is_published = False
+            else:
+                return jsonify({"success": False, "error": "Invalid status value"}), 400
+        if 'is_published' in data:
+            val = data['is_published']
+            if isinstance(val, str):
+                trainer.is_published = val.lower() == 'true'
+            else:
+                trainer.is_published = bool(val)
+
+            # Safety check: Cannot publish if not approved
+            if trainer.is_published and trainer.status != 'Approved':
+                return jsonify({"success": False, "error": "Cannot publish a profile that is not Approved"}), 400
+
+        # Handle profile photo upload during admin edit (if provided)
+        if request.files and request.files.get('photo'):
+            photo_file = request.files.get('photo')
+            if photo_file.filename:
+                trainers_upload_dir = os.path.join(app.config['UPLOAD_FOLDER'], "trainers")
+                os.makedirs(trainers_upload_dir, exist_ok=True)
+                filename = secure_filename(photo_file.filename)
+                timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                filename = f"photo_{timestamp}_{filename}"
+                save_path = os.path.join(trainers_upload_dir, filename)
+                photo_file.save(save_path)
+                trainer.photo = f"uploads/trainers/{filename}"
+
+        db.session.commit()
+        return jsonify({
+            "success": True,
+            "message": "Trainer updated successfully",
+            "trainer": trainer.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print("Error updating trainer:", str(e))
+        return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
 
 
 # --------------------- CHATBOT PROXY ENDPOINT ---------------------
