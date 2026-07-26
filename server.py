@@ -134,10 +134,20 @@ def fetch_osm_places(lat, lng, radius):
         return []
 
 
+# --------------------- CORS GLOBAL FILTER ---------------------
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
 # --------------------- BACKEND APIS ---------------------
 
-@app.route('/api/reports', methods=['POST'])
+@app.route('/api/reports', methods=['POST', 'OPTIONS'])
 def submit_report():
+    if request.method == 'OPTIONS':
+        return jsonify({"success": True}), 200
     """Accept and save an Emergency Animal Report, then find the nearest real-time clinics from Google Places API (or OpenStreetMap Fallback)."""
     try:
         # Support both form data (with image file) and JSON payloads
@@ -414,8 +424,10 @@ def submit_report():
 
 # --------------------- CHATBOT PROXY ENDPOINT ---------------------
 
-@app.route('/api/chat', methods=['POST'])
+@app.route('/api/chat', methods=['POST', 'OPTIONS'])
 def chat():
+    if request.method == 'OPTIONS':
+        return jsonify({"success": True}), 200
     """Gemini API chat helper proxy."""
     try:
         request_data = request.json
