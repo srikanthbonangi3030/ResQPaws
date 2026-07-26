@@ -206,7 +206,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Step 1: Detect location
         updateProgressStep("step-location", "active");
         if (statusText) statusText.textContent = "Step 1: Fetching location accuracy parameters...";
-        await new Promise(resolve => setTimeout(resolve, 600));
+        await new Promise(resolve => setTimeout(resolve, 100));
         updateProgressStep("step-location", "success", `Location Captured: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
 
         // Step 2: Submit report
@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const placesStatus = result.google_places_status || "OK";
         const placesError = result.google_places_error || "";
 
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         if (placesStatus !== "OK" && placesStatus !== "OSM_FALLBACK" && placesStatus !== "ZERO_RESULTS") {
           updateProgressStep("step-places", "error", `Places API Error: ${placesStatus}`);
@@ -260,7 +260,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           // Step 4: Calculate distances (Haversine sorting)
           updateProgressStep("step-haversine", "active");
           if (statusText) statusText.textContent = "Step 4: Executing Haversine distance calculations and ranking opening statuses...";
-          await new Promise(resolve => setTimeout(resolve, 600));
+          await new Promise(resolve => setTimeout(resolve, 100));
           updateProgressStep("step-haversine", "success");
 
           // Step 5: Finalize
@@ -402,7 +402,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
           }
 
-        }, 1200);
+        }, 100);
 
       } catch (submitErr) {
         console.error(submitErr);

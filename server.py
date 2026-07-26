@@ -227,6 +227,7 @@ def submit_report():
         last_api_status = "OK"
         last_api_error = None
         google_places_success = False
+        google_places_disabled = False
 
         if api_key:
             # Search queries
@@ -235,6 +236,8 @@ def submit_report():
 
             # Search progressively in parallel for each radius
             for r in radii:
+                if google_places_disabled:
+                    break
                 print(f"Searching Google Places veterinary clinics in {r/1000}km radius...")
                 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                     futures = {executor.submit(fetch_nearby_places, latitude, longitude, r, kw, api_key): kw for kw in keywords}
@@ -244,6 +247,9 @@ def submit_report():
                         if status not in ["OK", "ZERO_RESULTS"]:
                             last_api_status = status
                             last_api_error = data.get("error_message", "Unknown error")
+                            if status in ["REQUEST_DENIED", "INVALID_REQUEST", "HTTP_ERROR"]:
+                                google_places_disabled = True
+                                google_places_success = False
                         else:
                             google_places_success = True
                         
