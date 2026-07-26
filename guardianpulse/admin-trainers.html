@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Trainer Management - resQpaws</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar" id="main-nav-bar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <img src="assets/icons/icon-192.png" alt="Logo">
+        <span>resQ<span class="logo-accent">paws</span></span>
+      </a>
+      
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle Menu">☰</button>
+      
+      <div class="nav-links" id="nav-links-menu">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="about.html" class="nav-link">About Us</a>
+        <a href="trainers.html" class="nav-link">Trainers</a>
+        <a href="donate.html" class="nav-link">Donate</a>
+        <a href="contact.html" class="nav-link">Contact Us</a>
+        
+        <div class="nav-actions">
+          <div class="lang-select-wrapper">
+            <select class="lang-select" id="lang-switcher-select">
+              <option value="en">English</option>
+              <option value="te">తెలుగు</option>
+              <option value="hi">हिन्दी</option>
+            </select>
+          </div>
+          
+          <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Theme"></button>
+          
+          <a href="login.html" class="btn btn-primary btn-sm" id="nav-profile-link">Login</a>
+          <a href="#" class="btn btn-outline btn-sm" id="nav-logout-btn" style="display: none;">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="page-section container-wide">
+    <div class="dashboard-grid">
+      
+      <!-- Left sidebar: NGO profile, links -->
+      <aside class="dashboard-sidebar">
+        <!-- Profile info -->
+        <div class="glass-card profile-card">
+          <img id="profile-avatar-display" class="profile-avatar" src="assets/placeholder.png" alt="Profile">
+          <h3 id="profile-name-display" class="profile-name">NGO Rescuer</h3>
+          <span id="profile-role-display" class="profile-role">NGO Rescuer (Admin)</span>
+        </div>
+
+        <div class="glass-card sidebar-menu">
+          <a href="ngo-dashboard.html" class="sidebar-menu-btn">📊 NGO Panel Overview</a>
+          <button class="sidebar-menu-btn active">🐕 Manage Trainers</button>
+          <a href="volunteer.html" class="sidebar-menu-btn" style="display: flex;">🙋 Volunteer Network</a>
+          <a href="lost-found.html" class="sidebar-menu-btn" style="display: flex;">🔍 Lost & Found</a>
+        </div>
+      </aside>
+
+      <!-- Right panel: Trainer Applications Management -->
+      <section>
+        <div class="glass-card" style="margin-bottom: 24px; padding: 24px;">
+          <h2 style="font-size: 1.8rem; margin-bottom: 6px;">Trainer Management Dashboard</h2>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">Review pending enrollment applications, edit profiles, toggle publication status, and manage verified animal trainers.</p>
+        </div>
+
+        <!-- Status Filter Tabs -->
+        <div style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border-glass); padding-bottom: 12px; flex-wrap: wrap;">
+          <button class="btn btn-primary btn-sm tab-btn active" data-tab="Pending" style="border-radius: 20px; font-size: 0.85rem; padding: 6px 16px;">
+            Pending Applications (<span id="count-pending">0</span>)
+          </button>
+          <button class="btn btn-outline btn-sm tab-btn" data-tab="Approved" style="border-radius: 20px; font-size: 0.85rem; padding: 6px 16px; border-color: var(--primary); color: var(--text-main);">
+            Approved / Published (<span id="count-approved">0</span>)
+          </button>
+          <button class="btn btn-outline btn-sm tab-btn" data-tab="Rejected" style="border-radius: 20px; font-size: 0.85rem; padding: 6px 16px;">
+            Rejected Entries (<span id="count-rejected">0</span>)
+          </button>
+        </div>
+
+        <!-- Applications List Container -->
+        <div id="applications-list-container" style="display: flex; flex-direction: column; gap: 16px; min-height: 250px;">
+          <!-- Items dynamically injected via admin-trainers.js -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Edit Trainer Modal -->
+  <div class="modal-overlay" id="edit-trainer-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div class="glass-card no-lift" style="position: relative; width: 90%; max-width: 650px; max-height: 95vh; overflow-y: auto; padding: 30px; border-radius: 16px; background: var(--bg-card-opaque);">
+      <button id="close-edit-btn" style="position: absolute; top: 20px; right: 20px; font-size: 2rem; border: none; background: none; color: var(--text-muted); cursor: pointer;">&times;</button>
+      
+      <h2 style="font-size: 1.8rem; margin-bottom: 8px; border-bottom: 2px solid var(--primary); padding-bottom: 8px;">Edit Trainer Profile</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px;">Modify trainer information, update credentials, change approval status, and toggle profile visibility.</p>
+
+      <form id="edit-trainer-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <input type="hidden" id="edit-trainer-id">
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-name">Full Name *</label>
+            <input type="text" id="edit-name" class="form-control" required>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-phone">Mobile Number *</label>
+            <input type="tel" id="edit-phone" class="form-control" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-email">Email Address *</label>
+            <input type="email" id="edit-email" class="form-control" required>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-location">City *</label>
+            <input type="text" id="edit-location" class="form-control" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-specialization">Specialization *</label>
+            <select id="edit-specialization" class="form-control" required>
+              <option value="Dogs">Dogs</option>
+              <option value="Cats">Cats</option>
+              <option value="Birds">Birds</option>
+              <option value="Other">Others / Multiple Animals</option>
+            </select>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-experience">Years of Experience *</label>
+            <input type="number" id="edit-experience" class="form-control" min="0" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-languages">Languages Spoken *</label>
+            <input type="text" id="edit-languages" class="form-control" required>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-availability">Availability *</label>
+            <input type="text" id="edit-availability" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="filter-group" style="margin-bottom: 0;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-certifications">Certifications</label>
+          <input type="text" id="edit-certifications" class="form-control">
+        </div>
+
+        <div class="filter-group" style="margin-bottom: 0;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-bio">Short Biography / Description *</label>
+          <textarea id="edit-bio" class="form-control" rows="3" style="resize: vertical; font-family: var(--font-body);" required></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-status">Application Status *</label>
+            <select id="edit-status" class="form-control" required>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="edit-published">Is Published publicly? *</label>
+            <select id="edit-published" class="form-control" required>
+              <option value="false">Unpublished (Hidden)</option>
+              <option value="true">Published (Visible)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-glass); padding-top: 20px; display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px;">
+          <button type="button" class="btn btn-outline" id="cancel-edit-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-edit-btn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer style="background-color: var(--secondary); color: white; padding: 40px 20px; margin-top: 60px; border-top: 1px solid var(--border-card);">
+    <div class="container-wide" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="assets/icons/icon-192.png" alt="Logo" style="width: 32px; height: 32px;">
+        <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.25rem;">resQ<span style="color: var(--primary);">paws</span></span>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">&copy; 2026 resQpaws Care Network. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- JS Scripts -->
+  <script src="js/api-config.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/pages/admin-trainers.js"></script>
+</body>
+</html>
