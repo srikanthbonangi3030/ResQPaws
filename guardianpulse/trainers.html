@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animal Trainers - resQpaws</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Connect with verified animal behaviorists and professional pet trainers in the resQpaws care network.">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#16A34A">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar" id="main-nav-bar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">
+        <img src="assets/icons/icon-192.png" alt="Logo">
+        <span>resQ<span class="logo-accent">paws</span></span>
+      </a>
+      
+      <button class="nav-toggle" id="nav-toggle-btn" aria-label="Toggle Menu">☰</button>
+      
+      <div class="nav-links" id="nav-links-menu">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="about.html" class="nav-link">About Us</a>
+        <a href="trainers.html" class="nav-link active">Trainers</a>
+        <a href="donate.html" class="nav-link">Donate</a>
+        <a href="contact.html" class="nav-link">Contact Us</a>
+        
+        <div class="nav-actions">
+          <div class="lang-select-wrapper">
+            <select class="lang-select" id="lang-switcher-select">
+              <option value="en">English</option>
+              <option value="te">తెలుగు</option>
+              <option value="hi">हिन्दी</option>
+            </select>
+          </div>
+          
+          <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Theme"></button>
+          
+          <a href="login.html" class="btn btn-primary btn-sm" id="nav-profile-link">Login</a>
+          <a href="#" class="btn btn-outline btn-sm" id="nav-logout-btn" style="display: none;">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="page-header">
+    <h1 class="page-title">Find Professional Animal Trainers</h1>
+    <p class="page-subtitle">Connect with verified animal behaviorists and trainers in your city to support your pet's development and rehabilitation.</p>
+  </header>
+
+  <main class="page-section container-wide">
+    
+    <!-- Become a Trainer Banner -->
+    <div class="smart-match-banner" style="background: linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(15, 23, 42, 0.03) 100%); border-left: 5px solid var(--primary); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; padding: 24px; border-radius: 12px; gap: 20px; flex-wrap: wrap;">
+      <div class="smart-match-content" style="max-width: 750px;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 8px;">✨ Are you an Animal Trainer?</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Join our ResQPaws care network to offer professional behavioral therapy, positive reinforcement training, and pet rehabilitation services to pet parents and rescue shelter staff.</p>
+      </div>
+      <div>
+        <button class="btn btn-primary" id="open-enrollment-btn">Become a Trainer</button>
+      </div>
+    </div>
+
+    <!-- Filter and Search Bar -->
+    <div class="glass-card no-lift" style="margin-bottom: 30px; padding: 24px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; align-items: end;">
+        <div class="filter-group" style="margin-bottom: 0;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;" for="trainer-search-input">Search by Name</label>
+          <input type="text" id="trainer-search-input" class="form-control" placeholder="Search trainers...">
+        </div>
+        <div class="filter-group" style="margin-bottom: 0;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;" for="specialization-filter">Specialization</label>
+          <select id="specialization-filter" class="form-control">
+            <option value="">All Animals</option>
+            <option value="Dogs">Dogs</option>
+            <option value="Cats">Cats</option>
+            <option value="Birds">Birds</option>
+            <option value="Other">Others</option>
+          </select>
+        </div>
+        <div class="filter-group" style="margin-bottom: 0;">
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;" for="location-filter">Location (City)</label>
+          <input type="text" id="location-filter" class="form-control" placeholder="e.g. Vizianagaram">
+        </div>
+        <div>
+          <button class="btn btn-primary" id="apply-filters-btn" style="width: 100%; height: 42px;">Search Trainers</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Status Count -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 id="results-count" style="color: var(--text-muted); font-weight: 500; font-size: 1.1rem;">Loading trainers...</h3>
+    </div>
+
+    <!-- Trainers Grid Container -->
+    <div class="pets-grid" id="trainers-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; min-height: 200px;">
+      <!-- Cards dynamically injected via trainers.js -->
+    </div>
+  </main>
+
+  <!-- View Profile Details Modal -->
+  <div class="modal-overlay" id="trainer-profile-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div class="glass-card no-lift" style="position: relative; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 30px; border-radius: 16px; background: var(--bg-card-opaque);">
+      <button id="close-profile-btn" style="position: absolute; top: 20px; right: 20px; font-size: 2rem; border: none; background: none; color: var(--text-muted); cursor: pointer;">&times;</button>
+      
+      <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 24px; flex-wrap: wrap;">
+        <img id="modal-trainer-photo" src="" alt="Trainer Photo" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary);">
+        <div>
+          <h2 id="modal-trainer-name" style="font-size: 1.8rem; margin-bottom: 4px;">Trainer Name</h2>
+          <p id="modal-trainer-specialization" style="color: var(--accent); font-weight: 600;">Dogs Specialist</p>
+          <p id="modal-trainer-experience" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;">5 Years Experience</p>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 8px; border-bottom: 1px solid var(--border-glass); padding-bottom: 6px;">Biography</h3>
+        <p id="modal-trainer-bio" style="font-size: 0.95rem; line-height: 1.6; color: var(--text-main);"></p>
+      </div>
+
+      <div style="margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <div>
+          <h4 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Service Location</h4>
+          <p id="modal-trainer-location" style="font-weight: 500;">City</p>
+        </div>
+        <div>
+          <h4 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Availability</h4>
+          <p id="modal-trainer-availability" style="font-weight: 500;">Weekends</p>
+        </div>
+        <div>
+          <h4 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Languages Spoken</h4>
+          <p id="modal-trainer-languages" style="font-weight: 500;">English</p>
+        </div>
+        <div>
+          <h4 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase;">Certifications</h4>
+          <p id="modal-trainer-certifications" style="font-weight: 500;">None</p>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid var(--border-glass); padding-top: 20px; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+        <a id="modal-trainer-phone-link" href="" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+          📞 Call: <span id="modal-trainer-phone"></span>
+        </a>
+        <a id="modal-trainer-email-link" href="" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 8px;">
+          ✉️ Email: <span id="modal-trainer-email"></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Become a Trainer Enrollment Modal (Placeholder for Phase 3) -->
+  <div class="modal-overlay" id="enrollment-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div class="glass-card no-lift" style="position: relative; width: 90%; max-width: 650px; max-height: 95vh; overflow-y: auto; padding: 30px; border-radius: 16px; background: var(--bg-card-opaque);">
+      <button id="close-enrollment-btn" style="position: absolute; top: 20px; right: 20px; font-size: 2rem; border: none; background: none; color: var(--text-muted); cursor: pointer;">&times;</button>
+      
+      <h2 style="font-size: 1.8rem; margin-bottom: 8px; border-bottom: 2px solid var(--primary); padding-bottom: 8px;">Trainer Enrollment Application</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px;">Complete the form below to apply to join our verified care network. Your profile will be reviewed by administrators before publication.</p>
+
+      <form id="trainer-enrollment-form">
+        <p style="text-align: center; color: var(--text-muted); font-style: italic;">Enrollment form loading...</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer style="background-color: var(--secondary); color: white; padding: 40px 20px; margin-top: 60px; border-top: 1px solid var(--border-card);">
+    <div class="container-wide" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="assets/icons/icon-192.png" alt="Logo" style="width: 32px; height: 32px;">
+        <span style="font-family: var(--font-title); font-weight: 800; font-size: 1.25rem;">resQ<span style="color: var(--primary);">paws</span></span>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">&copy; 2026 resQpaws Care Network. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- JS Scripts -->
+  <script src="js/api-config.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/pages/trainers.js"></script>
+</body>
+</html>
