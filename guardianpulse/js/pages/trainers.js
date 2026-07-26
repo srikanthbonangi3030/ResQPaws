@@ -182,6 +182,73 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // 6. Trainer Enrollment Form Submission
+  const enrollmentForm = document.getElementById("trainer-enrollment-form");
+  const cancelEnrollBtn = document.getElementById("cancel-enrollment-btn");
+  
+  if (cancelEnrollBtn && enrollmentModal) {
+    cancelEnrollBtn.addEventListener("click", () => {
+      enrollmentModal.style.display = "none";
+    });
+  }
+
+  if (enrollmentForm) {
+    enrollmentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const submitBtn = document.getElementById("submit-enrollment-btn");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px;"></span> Submitting...';
+      }
+
+      const formData = new FormData(enrollmentForm);
+
+      try {
+        const baseUrl = window.GPApiConfig ? await window.GPApiConfig.resolveEndpoint("reports") : "";
+        const serverBase = baseUrl ? baseUrl.replace("/api/reports", "") : "http://127.0.0.1:8000";
+        
+        const response = await fetch(`${serverBase}/api/trainers/enroll`, {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          if (window.GPToast) {
+            window.GPToast.success(
+              "Application Submitted! 🎉",
+              "Your application has been submitted successfully. After verification by the administrator, your profile may be published in the Animal Trainers section.",
+              8000
+            );
+          } else {
+            alert("Your application has been submitted successfully. After verification by the administrator, your profile may be published in the Animal Trainers section.");
+          }
+
+          enrollmentForm.reset();
+          if (enrollmentModal) enrollmentModal.style.display = "none";
+          
+          fetchTrainers();
+        } else {
+          throw new Error(data.error || "Submission failed");
+        }
+      } catch (err) {
+        console.error("Trainer enrollment error:", err);
+        if (window.GPToast) {
+          window.GPToast.error("Submission Failed", err.message || "An error occurred during enrollment.");
+        } else {
+          alert(`Error: ${err.message || "An error occurred during enrollment."}`);
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit Application";
+        }
+      }
+    });
+  }
+
   // 5. Search / Filter Button Listeners
   if (searchBtn) {
     searchBtn.addEventListener("click", () => {

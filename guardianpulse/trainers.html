@@ -166,8 +166,82 @@
       <h2 style="font-size: 1.8rem; margin-bottom: 8px; border-bottom: 2px solid var(--primary); padding-bottom: 8px;">Trainer Enrollment Application</h2>
       <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px;">Complete the form below to apply to join our verified care network. Your profile will be reviewed by administrators before publication.</p>
 
-      <form id="trainer-enrollment-form">
-        <p style="text-align: center; color: var(--text-muted); font-style: italic;">Enrollment form loading...</p>
+      <form id="trainer-enrollment-form" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-name">Full Name *</label>
+            <input type="text" id="trainer-name" name="name" class="form-control" placeholder="e.g. Jane Doe" required>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-phone">Mobile Number *</label>
+            <input type="tel" id="trainer-phone" name="phone" class="form-control" placeholder="e.g. 9876543210" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-email">Email Address *</label>
+            <input type="email" id="trainer-email" name="email" class="form-control" placeholder="e.g. jane@email.com" required>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-location-input">City *</label>
+            <input type="text" id="trainer-location-input" name="location" class="form-control" placeholder="e.g. Vizianagaram" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-specialization-input">Specialization *</label>
+            <select id="trainer-specialization-input" name="specialization" class="form-control" required>
+              <option value="">Select Specialization</option>
+              <option value="Dogs">Dogs</option>
+              <option value="Cats">Cats</option>
+              <option value="Birds">Birds</option>
+              <option value="Other">Others / Multiple Animals</option>
+            </select>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-experience-input">Years of Experience *</label>
+            <input type="number" id="trainer-experience-input" name="experience" class="form-control" placeholder="e.g. 5" min="0" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-languages-input">Languages Spoken *</label>
+            <input type="text" id="trainer-languages-input" name="languages" class="form-control" placeholder="e.g. English, Telugu" required>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-availability-input">Availability *</label>
+            <input type="text" id="trainer-availability-input" name="availability" class="form-control" placeholder="e.g. Weekends, Weekdays" required>
+          </div>
+        </div>
+
+        <div class="filter-group" style="margin-bottom: 0;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-certifications-input">Certifications (if any)</label>
+          <input type="text" id="trainer-certifications-input" name="certifications" class="form-control" placeholder="e.g. CPDT-KA Certified Behavioral Specialist">
+        </div>
+
+        <div class="filter-group" style="margin-bottom: 0;">
+          <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-bio-input">Short Biography / Description *</label>
+          <textarea id="trainer-bio-input" name="bio" class="form-control" rows="3" placeholder="Describe your training methods, behavioral philosophy, and care standards..." style="resize: vertical; font-family: var(--font-body);" required></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 8px;">
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-photo-input">Profile Photo *</label>
+            <input type="file" id="trainer-photo-input" name="photo" class="form-control" accept="image/*" required>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-certs-file">Upload Certificates (Optional)</label>
+            <input type="file" id="trainer-certs-file" name="certificates" class="form-control" accept=".pdf,image/*">
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-glass); padding-top: 20px; display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px;">
+          <button type="button" class="btn btn-outline" id="cancel-enrollment-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submit-enrollment-btn">Submit Application</button>
+        </div>
       </form>
     </div>
   </div>
