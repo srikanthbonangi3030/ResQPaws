@@ -250,7 +250,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         await new Promise(resolve => setTimeout(resolve, 800));
         
-        if (placesStatus !== "OK" && placesStatus !== "ZERO_RESULTS") {
+        if (placesStatus !== "OK" && placesStatus !== "OSM_FALLBACK" && placesStatus !== "ZERO_RESULTS") {
           updateProgressStep("step-places", "error", `Places API Error: ${placesStatus}`);
           updateProgressStep("step-haversine", "error", "Calculation aborted due to API failure");
           updateProgressStep("step-done", "error", "Unable to retrieve nearby veterinary hospitals.");
@@ -286,7 +286,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const hospitalsGrid = document.getElementById("hospitals-grid");
           hospitalsGrid.innerHTML = "";
 
-          if (placesStatus !== "OK" && placesStatus !== "ZERO_RESULTS") {
+          if (placesStatus !== "OK" && placesStatus !== "OSM_FALLBACK" && placesStatus !== "ZERO_RESULTS") {
             hospitalsGrid.innerHTML = `
               <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 40px; border-left: 4px solid var(--danger);">
                 <span style="font-size: 3rem; display: block; margin-bottom: 12px;">⚠️</span>
