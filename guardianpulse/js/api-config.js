@@ -8,7 +8,7 @@ const GPApiConfig = {
   },
 
   // Fallback production URL (your Render live URL or Cloudflare Worker)
-  productionBaseUrl: "https://soft-sun-dafe.srikanthbonangi3030.workers.dev",
+  productionBaseUrl: "https://resqpaws-backend-8ub1.onrender.com",
 
   // Local development backend URL
   localBaseUrl: "http://127.0.0.1:8000",
