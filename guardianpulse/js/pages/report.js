@@ -238,6 +238,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const savedReport = result.report;
+        
+        // Synchronize with LocalStorage / Firestore so it instantly appears on NGO & User Dashboards
+        try {
+          const serverBase = endpointUrl.replace("/api/reports", "");
+          const reportDataForGPDB = {
+            id: savedReport.id,
+            reporterId: currentUser.uid,
+            reporterName: currentUser.name || currentUser.email,
+            contactNumber: contactNumber,
+            animalType: animalType,
+            emergencyType: emergencyType,
+            severity: severity,
+            description: description,
+            locationName: document.getElementById("location-name").value.trim(),
+            location: { lat, lng },
+            image: savedReport.image_path ? `${serverBase}/${savedReport.image_path}` : null,
+            status: "Reported",
+            createdDate: new Date().toISOString(),
+            assignedNgoId: null
+          };
+          await window.GPDB.saveReportDirectly(reportDataForGPDB);
+        } catch (gpdbErr) {
+          console.warn("Synchronization with Firestore/LocalStorage failed:", gpdbErr.message);
+        }
+
         updateProgressStep("step-report", "success", `Report Saved (Case ID: ${savedReport.id})`);
 
         // Step 3: Search Google Places Nearby API

@@ -90,6 +90,52 @@ const GPDB = {
       } catch (err) {
         throw err;
       }
+  },
+
+  // Save report directly (used to synchronize SQLite reports with Firestore/LocalStorage)
+  saveReportDirectly: async function(report) {
+    if (window.GuardianPulse.isDemoMode) {
+      const reports = this._readLocal("gp_reports");
+      const index = reports.findIndex(r => r.id === report.id);
+      if (index >= 0) {
+        reports[index] = report;
+      } else {
+        reports.push(report);
+      }
+      this._writeLocal("gp_reports", reports);
+      
+      this.createNotification(
+        report.reporterId || "user-1",
+        "Emergency Filed Successfully",
+        `Emergency report ${report.id} for a ${report.animalType} has been successfully filed.`
+      );
+      
+      const ngos = this._readLocal("gp_ngos");
+      ngos.forEach(ngo => {
+        if (ngo.status === "Available") {
+          this.createNotification(
+            ngo.id,
+            "New Emergency Alert!",
+            `A new emergency ${report.id} has been reported near ${report.locationName || 'your location'}.`
+          );
+        }
+      });
+      return report;
+    } else {
+      try {
+        const reportsRef = window.GuardianPulse.firestore.collection("reports");
+        await reportsRef.doc(report.id).set(report);
+        
+        await this.createNotification(report.reporterId, "Emergency Filed Successfully", `Emergency report ${report.id} for a ${report.animalType} has been successfully filed.`);
+        
+        const ngosSnapshot = await window.GuardianPulse.firestore.collection("ngos").where("status", "==", "Available").get();
+        ngosSnapshot.forEach(async (doc) => {
+          await this.createNotification(doc.id, "New Emergency Alert!", `A new emergency ${report.id} has been reported.`);
+        });
+        return report;
+      } catch (err) {
+        throw err;
+      }
     }
   },
 
@@ -790,6 +836,16 @@ window.GPDB = GPDB;
   const origSubmitReport = GPDB.submitReport.bind(GPDB);
   GPDB.submitReport = async function(reportData) {
     const result = await origSubmitReport(reportData);
+    if (window.GuardianPulse.isDemoMode) {
+      GPDB._dispatchEvent("gp-reports-updated");
+      GPDB._dispatchEvent("gp-notifications-updated");
+    }
+    return result;
+  };
+
+  const origSaveReportDirectly = GPDB.saveReportDirectly.bind(GPDB);
+  GPDB.saveReportDirectly = async function(report) {
+    const result = await origSaveReportDirectly(report);
     if (window.GuardianPulse.isDemoMode) {
       GPDB._dispatchEvent("gp-reports-updated");
       GPDB._dispatchEvent("gp-notifications-updated");

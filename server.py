@@ -187,8 +187,21 @@ def submit_report():
         # Generate unique report ID: GP-YYYY-XXX
         year = datetime.datetime.utcnow().year
         prefix = f"GP-{year}-"
-        count = EmergencyReport.query.filter(EmergencyReport.id.like(f"{prefix}%")).count()
-        report_id = f"{prefix}{count + 1:03d}"
+        max_report = EmergencyReport.query.filter(EmergencyReport.id.like(f"{prefix}%")).order_by(EmergencyReport.id.desc()).first()
+        if max_report:
+            try:
+                last_num = int(max_report.id.split("-")[-1])
+                next_num = last_num + 1
+            except (ValueError, IndexError):
+                next_num = 1
+        else:
+            next_num = 1
+        
+        while True:
+            report_id = f"{prefix}{next_num:03d}"
+            if not EmergencyReport.query.get(report_id):
+                break
+            next_num += 1
 
         # Create emergency report record
         report = EmergencyReport(
@@ -269,41 +282,38 @@ def submit_report():
             print("Google Places query unavailable or empty. Triggering OpenStreetMap Overpass fallback query...")
             osm_fallback_used = True
             
-            radii = [5000, 10000, 20000, 30000, 50000]
-            for r in radii:
-                osm_elements = fetch_osm_places(latitude, longitude, r)
-                for el in osm_elements:
-                    p_id = el.get("id")
-                    if p_id and p_id not in places_map:
-                        tags = el.get("tags", {})
-                        h_lat = el.get("lat") or el.get("center", {}).get("lat")
-                        h_lng = el.get("lon") or el.get("center", {}).get("lon")
-                        if h_lat is None or h_lng is None:
-                            continue
-                            
-                        # Build address
-                        addr_parts = []
-                        for k in ["addr:housenumber", "addr:street", "addr:suburb", "addr:city"]:
-                            v = tags.get(k)
-                            if v:
-                                addr_parts.append(v)
-                        addr = ", ".join(addr_parts) if addr_parts else tags.get("addr:full", "Address Unavailable")
+            # Query the maximum radius (50km) once! This avoids sequential slow HTTP requests.
+            osm_elements = fetch_osm_places(latitude, longitude, 50000)
+            for el in osm_elements:
+                p_id = el.get("id")
+                if p_id and p_id not in places_map:
+                    tags = el.get("tags", {})
+                    h_lat = el.get("lat") or el.get("center", {}).get("lat")
+                    h_lng = el.get("lon") or el.get("center", {}).get("lon")
+                    if h_lat is None or h_lng is None:
+                        continue
                         
-                        places_map[p_id] = {
-                            "place_id": f"osm_{p_id}",
-                            "name": tags.get("name", "Veterinary Clinic"),
-                            "vicinity": addr,
-                            "geometry": {"location": {"lat": h_lat, "lng": h_lng}},
-                            "business_status": "OPERATIONAL",
-                            "rating": 0.0,
-                            "user_ratings_total": 0,
-                            "opening_hours": {"open_now": True},
-                            "phone_number": tags.get("phone") or tags.get("contact:phone") or "",
-                            "website": tags.get("website") or tags.get("contact:website") or "",
-                            "is_osm": True
-                        }
-                if len(places_map) >= 5:
-                    break
+                    # Build address
+                    addr_parts = []
+                    for k in ["addr:housenumber", "addr:street", "addr:suburb", "addr:city"]:
+                        v = tags.get(k)
+                        if v:
+                            addr_parts.append(v)
+                    addr = ", ".join(addr_parts) if addr_parts else tags.get("addr:full", "Address Unavailable")
+                    
+                    places_map[p_id] = {
+                        "place_id": f"osm_{p_id}",
+                        "name": tags.get("name", "Veterinary Clinic"),
+                        "vicinity": addr,
+                        "geometry": {"location": {"lat": h_lat, "lng": h_lng}},
+                        "business_status": "OPERATIONAL",
+                        "rating": 0.0,
+                        "user_ratings_total": 0,
+                        "opening_hours": {"open_now": True},
+                        "phone_number": tags.get("phone") or tags.get("contact:phone") or "",
+                        "website": tags.get("website") or tags.get("contact:website") or "",
+                        "is_osm": True
+                    }
 
         # Filter out closed & validate coords
         valid_hospitals = []
@@ -499,8 +509,21 @@ def enroll_trainer():
         # Generate TR-YYYY-XXX ID
         year = datetime.datetime.utcnow().year
         prefix = f"TR-{year}-"
-        count = Trainer.query.filter(Trainer.id.like(f"{prefix}%")).count()
-        trainer_id = f"{prefix}{str(count + 1).zfill(3)}"
+        max_trainer = Trainer.query.filter(Trainer.id.like(f"{prefix}%")).order_by(Trainer.id.desc()).first()
+        if max_trainer:
+            try:
+                last_num = int(max_trainer.id.split("-")[-1])
+                next_num = last_num + 1
+            except (ValueError, IndexError):
+                next_num = 1
+        else:
+            next_num = 1
+            
+        while True:
+            trainer_id = f"{prefix}{next_num:03d}"
+            if not Trainer.query.get(trainer_id):
+                break
+            next_num += 1
 
         new_trainer = Trainer(
             id=trainer_id,
