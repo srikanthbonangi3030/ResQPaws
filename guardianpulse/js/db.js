@@ -466,6 +466,40 @@ const GPDB = {
     }
   },
 
+  // Update Lost & Found posting status/type (e.g., move Lost animal to Found section)
+  updateLostFoundType: async function(recordId, newType) {
+    if (window.GuardianPulse.isDemoMode || !window.GuardianPulse.firestore) {
+      const records = this._readLocal("gp_lostfound");
+      const index = records.findIndex(r => r.id === recordId);
+      if (index >= 0) {
+        records[index].type = newType;
+        records[index].status = newType === "Found" ? "Found / Resolved" : "Active";
+        this._writeLocal("gp_lostfound", records);
+        this._dispatchEvent("gp-lostfound-updated");
+      }
+      return Promise.resolve(true);
+    } else {
+      try {
+        await window.GuardianPulse.firestore.collection("lostfound").doc(recordId).update({
+          type: newType,
+          status: newType === "Found" ? "Found / Resolved" : "Active"
+        });
+        return true;
+      } catch (err) {
+        console.warn("Firestore updateLostFoundType error, falling back to local storage:", err);
+        const records = this._readLocal("gp_lostfound");
+        const index = records.findIndex(r => r.id === recordId);
+        if (index >= 0) {
+          records[index].type = newType;
+          records[index].status = newType === "Found" ? "Found / Resolved" : "Active";
+          this._writeLocal("gp_lostfound", records);
+          this._dispatchEvent("gp-lostfound-updated");
+        }
+        return true;
+      }
+    }
+  },
+
   // Core match algorithm: Calculates a matching percentage between standard Lost & Found postings
   // Criteria: Type alignment (one Lost, one Found), Animal Type match, and location + keyword string intersections
   findMatchesForRecord: function(record, allRecords) {
@@ -913,6 +947,15 @@ window.GPDB = GPDB;
   const origSubmitLostFound = GPDB.submitLostFound.bind(GPDB);
   GPDB.submitLostFound = async function(recordData) {
     const result = await origSubmitLostFound(recordData);
+    if (window.GuardianPulse.isDemoMode) {
+      GPDB._dispatchEvent("gp-lostfound-updated");
+    }
+    return result;
+  };
+
+  const origUpdateLostFoundType = GPDB.updateLostFoundType.bind(GPDB);
+  GPDB.updateLostFoundType = async function(recordId, newType) {
+    const result = await origUpdateLostFoundType(recordId, newType);
     if (window.GuardianPulse.isDemoMode) {
       GPDB._dispatchEvent("gp-lostfound-updated");
     }

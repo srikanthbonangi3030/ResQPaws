@@ -155,6 +155,21 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       }
 
+      let moveStatusBtnHtml = '';
+      if (record.type === 'Lost') {
+        moveStatusBtnHtml = `
+          <button class="btn btn-sm" onclick="markAnimalAsFound('${record.id}')" style="margin-top: 8px; width: 100%; background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid #22c55e; border-radius: 8px; font-weight: 600; padding: 8px 12px; cursor: pointer;">
+            ✅ Found (Move to Found Section)
+          </button>
+        `;
+      } else {
+        moveStatusBtnHtml = `
+          <button class="btn btn-sm" onclick="markAnimalAsLost('${record.id}')" style="margin-top: 8px; width: 100%; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; border-radius: 8px; font-weight: 600; padding: 8px 12px; cursor: pointer;">
+            ↩️ Move to Lost Section
+          </button>
+        `;
+      }
+
       return `
         <div class="glass-card lf-card">
           <div style="position: relative;">
@@ -176,6 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
               📞 ${record.contact || 'N/A'} (${record.userName || 'Anonymous'})
             </div>
             ${matchButtonHtml}
+            ${moveStatusBtnHtml}
           </div>
         </div>
       `;
@@ -304,5 +320,42 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
     modalEl.style.display = "flex";
+  };
+
+  // Global Handlers to update listing status between Lost and Found
+  window.markAnimalAsFound = async function(recordId) {
+    if (!confirm("Are you sure this lost animal has been found? This will move the listing to the Found section.")) return;
+    try {
+      if (!window.GPDB) throw new Error("Database module unavailable. Please refresh page.");
+      await window.GPDB.updateLostFoundType(recordId, "Found");
+      if (window.GPToast) {
+        window.GPToast.success("Animal Moved!", "Listing has been successfully updated and moved to Found Section.");
+      }
+    } catch (err) {
+      console.error(err);
+      if (window.GPToast) {
+        window.GPToast.error("Update Failed", err.message || "Could not update status.");
+      } else {
+        alert("Failed to update status. Please try again.");
+      }
+    }
+  };
+
+  window.markAnimalAsLost = async function(recordId) {
+    if (!confirm("Move this listing back to the Lost section?")) return;
+    try {
+      if (!window.GPDB) throw new Error("Database module unavailable. Please refresh page.");
+      await window.GPDB.updateLostFoundType(recordId, "Lost");
+      if (window.GPToast) {
+        window.GPToast.success("Animal Moved!", "Listing has been successfully moved back to Lost Section.");
+      }
+    } catch (err) {
+      console.error(err);
+      if (window.GPToast) {
+        window.GPToast.error("Update Failed", err.message || "Could not update status.");
+      } else {
+        alert("Failed to update status. Please try again.");
+      }
+    }
   };
 });
