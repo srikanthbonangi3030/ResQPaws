@@ -90,6 +90,7 @@ const GPDB = {
       } catch (err) {
         throw err;
       }
+    }
   },
 
   // Save report directly (used to synchronize SQLite reports with Firestore/LocalStorage)
@@ -418,7 +419,7 @@ const GPDB = {
   // --- LOST & FOUND Matching Engine ---
 
   submitLostFound: async function(recordData) {
-    if (window.GuardianPulse.isDemoMode) {
+    if (window.GuardianPulse.isDemoMode || !window.GuardianPulse.firestore) {
       const records = this._readLocal("gp_lostfound");
       const newRecord = {
         id: "lf-" + Date.now(),
@@ -429,21 +430,39 @@ const GPDB = {
       this._writeLocal("gp_lostfound", records);
       return Promise.resolve(newRecord);
     } else {
-      const docRef = window.GuardianPulse.firestore.collection("lostfound").doc();
-      const newRecord = { id: docRef.id, date: new Date().toISOString().split('T')[0], ...recordData };
-      await docRef.set(newRecord);
-      return newRecord;
+      try {
+        const docRef = window.GuardianPulse.firestore.collection("lostfound").doc();
+        const newRecord = { id: docRef.id, date: new Date().toISOString().split('T')[0], ...recordData };
+        await docRef.set(newRecord);
+        return newRecord;
+      } catch (err) {
+        console.warn("Firestore submitLostFound error, falling back to local storage:", err);
+        const records = this._readLocal("gp_lostfound");
+        const newRecord = {
+          id: "lf-" + Date.now(),
+          date: new Date().toISOString().split('T')[0],
+          ...recordData
+        };
+        records.push(newRecord);
+        this._writeLocal("gp_lostfound", records);
+        return newRecord;
+      }
     }
   },
 
   getLostFound: async function() {
-    if (window.GuardianPulse.isDemoMode) {
+    if (window.GuardianPulse.isDemoMode || !window.GuardianPulse.firestore) {
       return Promise.resolve(this._readLocal("gp_lostfound"));
     } else {
-      const snapshot = await window.GuardianPulse.firestore.collection("lostfound").get();
-      const list = [];
-      snapshot.forEach(doc => list.push(doc.data()));
-      return list;
+      try {
+        const snapshot = await window.GuardianPulse.firestore.collection("lostfound").get();
+        const list = [];
+        snapshot.forEach(doc => list.push(doc.data()));
+        return list;
+      } catch (err) {
+        console.warn("Firestore getLostFound error, falling back to local storage:", err);
+        return Promise.resolve(this._readLocal("gp_lostfound"));
+      }
     }
   },
 

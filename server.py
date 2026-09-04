@@ -111,27 +111,37 @@ def fetch_place_details(place_id, api_key):
         return {"status": "HTTP_ERROR", "result": {}, "error_message": str(e)}
 
 # Helper function to fetch OpenStreetMap Overpass veterinary places
-def fetch_osm_places(lat, lng, radius):
-    query = f"""[out:json];(node["amenity"="veterinary"](around:{radius},{lat},{lng});way["amenity"="veterinary"](around:{radius},{lat},{lng});relation["amenity"="veterinary"](around:{radius},{lat},{lng}););out center;"""
-    url = f"https://overpass-api.de/api/interpreter?data={urllib.parse.quote(query)}"
-    print(f"OSM OVERPASS REQUEST: {url}")
-    try:
-        req = urllib.request.Request(
-            url,
-            headers={
-                'User-Agent': 'resQPawsAnimalRescueApp/1.0 (emergency-dev@resqpaws.org)',
-                'Referer': 'https://resqpaws.netlify.app/'
-            }
-        )
-        with urllib.request.urlopen(req, timeout=8) as response:
-            res_body = response.read().decode('utf-8')
-            data = json.loads(res_body)
-            elements = data.get("elements", [])
-            print(f"OSM OVERPASS RESPONSE: Found {len(elements)} elements")
-            return elements
-    except Exception as e:
-        print(f"Error fetching OpenStreetMap Overpass for lat={lat}, lng={lng}, radius={radius}: {e}")
-        return []
+def fetch_osm_places(lat, lng, radius=15000):
+    radii = [15000, 50000] if radius >= 50000 else [radius]
+    endpoints = [
+        "https://overpass-api.de/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter"
+    ]
+    
+    for r in radii:
+        query = f"""[out:json][timeout:8];(node["amenity"="veterinary"](around:{r},{lat},{lng});way["amenity"="veterinary"](around:{r},{lat},{lng});relation["amenity"="veterinary"](around:{r},{lat},{lng}););out center;"""
+        for base_url in endpoints:
+            url = f"{base_url}?data={urllib.parse.quote(query)}"
+            print(f"OSM OVERPASS REQUEST (radius {r}m): {url}")
+            try:
+                req = urllib.request.Request(
+                    url,
+                    headers={
+                        'User-Agent': 'resQPawsAnimalRescueApp/1.0 (emergency-dev@resqpaws.org)',
+                        'Accept': 'application/json, */*'
+                    }
+                )
+                with urllib.request.urlopen(req, timeout=8) as response:
+                    res_body = response.read().decode('utf-8')
+                    data = json.loads(res_body)
+                    elements = data.get("elements", [])
+                    print(f"OSM OVERPASS RESPONSE ({base_url}, {r}m): Found {len(elements)} elements")
+                    if elements:
+                        return elements
+            except Exception as e:
+                print(f"Error fetching OpenStreetMap Overpass from {base_url} for lat={lat}, lng={lng}, radius={r}m: {e}")
+            
+    return []
 
 
 # --------------------- CORS GLOBAL FILTER ---------------------
@@ -749,41 +759,64 @@ def chat():
             }
         }
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={api_key}"
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(gemini_payload).encode('utf-8'),
-            headers={'Content-Type': 'application/json'},
-            method='POST'
-        )
+        # Candidate models to attempt in order of preference
+        candidate_models = [
+            "gemini-3.6-flash",
+            "gemini-3.5-flash",
+            "gemini-3.7-flash",
+            "gemini-flash-latest"
+        ]
 
-        try:
-            with urllib.request.urlopen(req, timeout=15) as response:
-                res_body = json.loads(response.read().decode('utf-8'))
-                candidates = res_body.get("candidates", [])
-                reply = ""
-                if candidates:
-                    parts = candidates[0].get("content", {}).get("parts", [])
-                    if parts:
-                        reply = parts[0].get("text", "")
-                
-                if not reply:
-                    reply = "I'm sorry, I couldn't generate a response at this moment."
+        last_error_msg = None
+        last_error_code = 500
 
-                return jsonify({"success": True, "response": reply}), 200
+        for model in candidate_models:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(gemini_payload).encode('utf-8'),
+                headers={'Content-Type': 'application/json'},
+                method='POST'
+            )
 
-        except urllib.error.HTTPError as e:
             try:
-                err_msg = e.read().decode('utf-8')
-                print("Gemini API Error Detail:", err_msg)
-                err_data = json.loads(err_msg)
-                detailed_err = err_data.get("error", {}).get("message", e.reason)
-            except:
-                detailed_err = e.reason
-            return jsonify({"success": False, "error": f"Gemini API Error: {detailed_err}"}), e.code
-        except urllib.error.URLError as url_err:
-            print("Gemini API Connection Error:", str(url_err))
-            return jsonify({"success": False, "error": f"Connection to Gemini API failed: {str(url_err.reason)}"}), 504
+                with urllib.request.urlopen(req, timeout=20) as response:
+                    res_body = json.loads(response.read().decode('utf-8'))
+                    candidates = res_body.get("candidates", [])
+                    reply = ""
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        if parts:
+                            reply = parts[0].get("text", "")
+                    
+                    if not reply:
+                        reply = "I'm sorry, I couldn't generate a response at this moment."
+
+                    return jsonify({"success": True, "response": reply}), 200
+
+            except urllib.error.HTTPError as e:
+                try:
+                    err_msg = e.read().decode('utf-8')
+                    print(f"Gemini API Error Detail ({model}):", err_msg)
+                    err_data = json.loads(err_msg)
+                    detailed_err = err_data.get("error", {}).get("message", e.reason)
+                except:
+                    detailed_err = e.reason
+                last_error_msg = f"Gemini API Error ({model}): {detailed_err}"
+                last_error_code = e.code
+                # Continue trying next fallback model if 503 (Unavailable), 429 (Rate Limit), or 404 (Not Found)
+                if e.code in [503, 429, 404]:
+                    print(f"Model '{model}' returned HTTP {e.code}. Trying next fallback model...")
+                    continue
+                else:
+                    return jsonify({"success": False, "error": last_error_msg}), e.code
+            except urllib.error.URLError as url_err:
+                print(f"Gemini API Connection Error ({model}):", str(url_err))
+                last_error_msg = f"Connection to Gemini API failed ({model}): {str(url_err.reason)}"
+                last_error_code = 504
+                continue
+
+        return jsonify({"success": False, "error": last_error_msg or "All Gemini models unavailable"}), last_error_code
 
     except Exception as ex:
         print("Internal Chatbot Exception:", str(ex))

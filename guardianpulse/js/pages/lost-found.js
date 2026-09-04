@@ -82,15 +82,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const recordData = {
-        userId: activeUser.uid,
-        userName: activeUser.name,
+        userId: activeUser ? (activeUser.uid || activeUser.id || 'user-1') : 'user-1',
+        userName: activeUser ? (activeUser.name || activeUser.displayName || activeUser.email || 'Anonymous') : 'Anonymous',
         type: type,
         animalType: animalType,
         location: location,
         contact: contact,
         keywords: keywords,
         description: description,
-        imageUrl: lfPreviewImg.src || "assets/placeholder.png"
+        imageUrl: (lfPreviewImg && lfPreviewImg.src && lfPreviewImg.src.length > 5 && !lfPreviewImg.src.endsWith("lost-found.html")) ? lfPreviewImg.src : "assets/placeholder.png"
       };
 
       try {
