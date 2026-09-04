@@ -94,6 +94,9 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       try {
+        if (!window.GPDB) {
+          throw new Error("Database module not loaded. Please hard-refresh your browser page (Ctrl+F5 or Cmd+Shift+R).");
+        }
         const newRecord = await window.GPDB.submitLostFound(recordData);
         
         // ✅ Toast instead of alert
@@ -135,13 +138,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const listContainerFound = document.getElementById("found-grid-container");
     
     if (!listContainerLost || !listContainerFound) return;
+    if (!Array.isArray(allRecords)) allRecords = [];
 
     const lostList = allRecords.filter(r => r.type === "Lost");
     const foundList = allRecords.filter(r => r.type === "Found");
 
     const renderCard = (record) => {
       // Calculate possible matches
-      const matches = window.GPDB.findMatchesForRecord(record, allRecords);
+      const matches = (window.GPDB && window.GPDB.findMatchesForRecord) ? window.GPDB.findMatchesForRecord(record, allRecords) : [];
       let matchButtonHtml = '';
       if (matches.length > 0) {
         matchButtonHtml = `
@@ -152,49 +156,61 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       return `
-        <div class="glass-card">
-          <img src="${record.imageUrl || 'assets/placeholder.png'}" style="height: 180px; width: 100%; object-fit: cover; border-radius: 8px; margin-bottom: 12px;" alt="${record.animalType}">
-          <h3 style="margin-bottom: 4px;">${record.animalType}</h3>
-          <p style="font-size:0.85rem; font-weight:600; color:var(--accent); margin-bottom: 8px;">📍 ${record.location}</p>
-          <p style="font-size:0.9rem; color:var(--text-muted); min-height: 54px; margin-bottom: 12px;">${record.description}</p>
-          <hr style="border-color:var(--border-glass); margin-bottom: 12px;">
-          <div style="font-size:0.85rem; color:var(--text-main);">
-            <strong>Contact:</strong> ${record.contact}<br>
-            <strong>Posted:</strong> ${record.date}
+        <div class="glass-card lf-card">
+          <div style="position: relative;">
+            <img src="${record.imageUrl || 'assets/placeholder.png'}" alt="${record.animalType}" class="lf-card-img">
+            <span class="badge ${record.type === 'Lost' ? 'badge-danger' : 'badge-success'}" style="position: absolute; top: 12px; right: 12px;">
+              ${record.type}
+            </span>
           </div>
-          ${matchButtonHtml}
+          <div style="padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h3 style="font-size: 1.1rem; font-weight: 600;">${record.animalType}</h3>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">${record.date || ''}</span>
+            </div>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px;">📍 ${record.location || 'Unknown'}</p>
+            <p style="font-size: 0.9rem; margin-bottom: 12px; line-clamp: 2; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">
+              ${record.description || ''}
+            </p>
+            <div style="font-size: 0.85rem; font-weight: 500; color: var(--accent-color);">
+              📞 ${record.contact || 'N/A'} (${record.userName || 'Anonymous'})
+            </div>
+            ${matchButtonHtml}
+          </div>
         </div>
       `;
     };
 
-    // Populate lost cases
     if (lostList.length === 0) {
-      listContainerLost.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No active lost animal reports.</p>`;
+      listContainerLost.innerHTML = `<div class="empty-state" style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-muted);">No lost animals reported yet.</div>`;
     } else {
-      listContainerLost.innerHTML = lostList.map(r => renderCard(r)).join("");
+      listContainerLost.innerHTML = lostList.map(renderCard).join('');
     }
 
-    // Populate found cases
     if (foundList.length === 0) {
-      listContainerFound.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No active found animal reports.</p>`;
+      listContainerFound.innerHTML = `<div class="empty-state" style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-muted);">No found animals reported yet.</div>`;
     } else {
-      listContainerFound.innerHTML = foundList.map(r => renderCard(r)).join("");
+      listContainerFound.innerHTML = foundList.map(renderCard).join('');
     }
   }
 
-  // 🔴 REAL-TIME: subscribe to lost-found data
-  // Show skeleton while loading
+  // Skeleton loading state while data loads
+  const skeletonHtml = Array(3).fill(`
+    <div class="glass-card" style="height: 320px; animation: pulse 1.5s infinite;"></div>
+  `).join('');
+  
   const listContainerLost = document.getElementById("lost-grid-container");
   const listContainerFound = document.getElementById("found-grid-container");
-  const skeletonHtml = Array(3).fill(`<div class="skeleton skeleton-card"></div>`).join("");
+
   if (listContainerLost) listContainerLost.innerHTML = skeletonHtml;
   if (listContainerFound) listContainerFound.innerHTML = skeletonHtml;
 
   // Subscribe to live updates
-  if (window.GuardianPulse && window.GuardianPulse.isDemoMode) {
-    // Demo mode: listen to custom event
+  if (!window.GuardianPulse || window.GuardianPulse.isDemoMode || !window.GuardianPulse.firestore) {
+    // Demo mode or offline fallback: listen to custom event
     const fireList = async () => {
       try {
+        if (!window.GPDB) return;
         const allRecords = await window.GPDB.getLostFound();
         renderLostFoundLists(allRecords);
       } catch (err) {
@@ -213,11 +229,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const allRecords = [];
         snapshot.forEach(doc => allRecords.push(doc.data()));
         renderLostFoundLists(allRecords);
-      }, (err) => {
+      }, async (err) => {
         console.error("Lost Found snapshot error:", err);
+        if (window.GPDB) {
+          const allRecords = await window.GPDB.getLostFound();
+          renderLostFoundLists(allRecords);
+        }
       });
     } catch (err) {
       console.error("Firebase snapshot setup failed:", err);
+      if (window.GPDB) {
+        window.GPDB.getLostFound().then(renderLostFoundLists).catch(() => {});
+      }
     }
   }
 
