@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+  <script>
+    (function() {
+      var t = localStorage.getItem("gp_theme") || "light";
+      document.documentElement.setAttribute("data-theme", t);
+      var bg = t === "dark" ? "#070B13" : "#F8FAFC";
+      var color = t === "dark" ? "#F8FAFC" : "#0F172A";
+      document.write('<style>html,body{background-color:' + bg + ' !important;color:' + color + ' !important;}</style>');
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lost & Found - resQpaws</title>

@@ -442,3 +442,39 @@ const GPToast = {
 };
 
 window.GPToast = GPToast;
+
+// --- FAST LINK PREFETCHING & SMOOTH PAGE TRANSITIONS (Flipkart-Style Smooth Navigation) ---
+(function initSmoothTransitions() {
+  const prefetched = new Set();
+  const prefetch = (url) => {
+    if (!url || prefetched.has(url) || url.startsWith("#") || url.startsWith("javascript:") || url.startsWith("http") || url.startsWith("tel:") || url.startsWith("mailto:")) return;
+    prefetched.add(url);
+    const link = document.createElement("link");
+    link.rel = "prefetch";
+    link.href = url;
+    document.head.appendChild(link);
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Prefetch links on hover/touch and apply smooth exit animation on click
+    document.querySelectorAll("a[href]").forEach((a) => {
+      const href = a.getAttribute("href");
+      if (!href || href.startsWith("#") || href.startsWith("javascript:") || href.startsWith("http") || href.startsWith("tel:") || href.startsWith("mailto:")) return;
+
+      a.addEventListener("mouseenter", () => prefetch(href), { passive: true });
+      a.addEventListener("touchstart", () => prefetch(href), { passive: true });
+
+      a.addEventListener("click", (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || a.target === "_blank") return;
+        const target = a.href;
+        if (target && target !== window.location.href && !target.includes("#")) {
+          e.preventDefault();
+          document.body.classList.add("page-fading-out");
+          setTimeout(() => {
+            window.location.href = target;
+          }, 120);
+        }
+      });
+    });
+  });
+})();
