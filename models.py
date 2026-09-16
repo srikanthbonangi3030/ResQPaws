@@ -55,6 +55,20 @@ class Trainer(db.Model):
     bio = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(50), default='Pending', nullable=False)  # Pending, Approved, Rejected
     is_published = db.Column(db.Boolean, default=False, nullable=False)
+    
+    # Document Verification & BGV Fields
+    govt_id_path = db.Column(db.String(255), nullable=True)
+    cert_doc_path = db.Column(db.String(255), nullable=True)
+    verification_status = db.Column(db.String(50), default='PENDING_VERIFICATION', nullable=False)
+    ocr_data_json = db.Column(db.Text, nullable=True)
+    name_match_score = db.Column(db.Integer, nullable=True)
+    expiry_status = db.Column(db.String(50), nullable=True)
+    duplicate_status = db.Column(db.String(50), nullable=True)
+    contact_status = db.Column(db.String(50), nullable=True)
+    rejection_reason = db.Column(db.Text, nullable=True)
+    verified_by = db.Column(db.String(100), nullable=True)
+    verified_at = db.Column(db.DateTime, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, nullable=False)
 
     def to_dict(self):
@@ -73,5 +87,16 @@ class Trainer(db.Model):
             "bio": self.bio,
             "status": self.status,
             "is_published": self.is_published,
+            "govt_id_path": self.govt_id_path,
+            "cert_doc_path": self.cert_doc_path,
+            "verification_status": self.verification_status,
+            "ocr_data_json": self.ocr_data_json,
+            "name_match_score": self.name_match_score,
+            "expiry_status": self.expiry_status,
+            "duplicate_status": self.duplicate_status,
+            "contact_status": self.contact_status,
+            "rejection_reason": self.rejection_reason,
+            "verified_by": self.verified_by,
+            "verified_at": self.verified_at.isoformat() if self.verified_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }

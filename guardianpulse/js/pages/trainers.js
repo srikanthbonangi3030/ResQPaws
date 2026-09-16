@@ -99,6 +99,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           <span class="pet-card-badge" style="background-color: var(--primary); color: white; top: 12px; left: 12px; font-size:0.8rem; padding: 4px 10px; border-radius:20px;">
             ${t.experience} Years Exp
           </span>
+          <span class="pet-card-badge" style="background-color: #065F46; color: white; top: 12px; right: 12px; font-size:0.75rem; padding: 4px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:4px;">
+            🛡️ BGV Verified
+          </span>
         </div>
         
         <h3 style="margin-bottom: 4px; font-size: 1.25rem;">${t.name}</h3>
@@ -196,10 +199,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     enrollmentForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      const photoInput = document.getElementById("trainer-photo-input");
+      const certsInput = document.getElementById("trainer-certs-file");
+      const idInput = document.getElementById("trainer-id-file");
+
+      const allowedExts = ["pdf", "jpg", "jpeg", "png", "webp"];
+      const maxSizeBytes = 10 * 1024 * 1024; // 10MB
+
+      const validateFile = (fileInput, label) => {
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) return true;
+        const file = fileInput.files[0];
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!allowedExts.includes(ext)) {
+          throw new Error(`${label} must be a valid file format (${allowedExts.join(', ')}).`);
+        }
+        if (file.size > maxSizeBytes) {
+          throw new Error(`${label} file size exceeds 10MB limit (File size: ${(file.size / (1024 * 1024)).toFixed(2)}MB).`);
+        }
+        return true;
+      };
+
+      try {
+        validateFile(photoInput, "Profile Photo");
+        validateFile(certsInput, "Qualification Certificate");
+        validateFile(idInput, "Government Photo ID");
+      } catch (valErr) {
+        if (window.GPToast) {
+          window.GPToast.warning("Validation Error", valErr.message);
+        } else {
+          alert(valErr.message);
+        }
+        return;
+      }
+
       const submitBtn = document.getElementById("submit-enrollment-btn");
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px;"></span> Submitting...';
+        submitBtn.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;margin-right:8px;"></span> Uploading & Submitting...';
       }
 
       const formData = new FormData(enrollmentForm);

@@ -7,10 +7,12 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import concurrent.futures
+import threading
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from models import db, EmergencyReport, Trainer
+from backend.verification import process_trainer_verification
 
 PORT = 8000
 DIRECTORY = os.path.join(os.path.dirname(__file__), "guardianpulse")
@@ -460,10 +462,12 @@ def enroll_trainer():
             data = request.form
             photo_file = request.files.get('photo')
             cert_file = request.files.get('certificates')
+            govt_id_file = request.files.get('govt_id')
         else:
             data = request.json
             photo_file = None
             cert_file = None
+            govt_id_file = None
 
         if not data:
             return jsonify({"success": False, "error": "No data provided"}), 400
@@ -487,6 +491,29 @@ def enroll_trainer():
         except ValueError:
             return jsonify({"success": False, "error": "Experience must be a valid number"}), 400
 
+        # Allowed extensions and size check helper
+        allowed_exts = {'pdf', 'jpg', 'jpeg', 'png', 'webp'}
+        def check_file(file_obj, label):
+            if not file_obj or not file_obj.filename:
+                return None
+            ext = file_obj.filename.rsplit('.', 1)[-1].lower() if '.' in file_obj.filename else ''
+            if ext not in allowed_exts:
+                raise ValueError(f"{label} file extension '.{ext}' is not supported. Use PDF, JPG, PNG, or WEBP.")
+            # Check size via length if available
+            file_obj.seek(0, os.SEEK_END)
+            size = file_obj.tell()
+            file_obj.seek(0)
+            if size > 10 * 1024 * 1024:
+                raise ValueError(f"{label} file exceeds 10MB limit.")
+            return ext
+
+        try:
+            check_file(photo_file, "Profile photo")
+            check_file(cert_file, "Qualification certificate")
+            check_file(govt_id_file, "Government photo ID")
+        except ValueError as ve:
+            return jsonify({"success": False, "error": str(ve)}), 400
+
         # Create subfolder for trainers if not exists
         trainers_upload_dir = os.path.join(app.config['UPLOAD_FOLDER'], "trainers")
         os.makedirs(trainers_upload_dir, exist_ok=True)
@@ -501,7 +528,7 @@ def enroll_trainer():
             photo_file.save(save_path)
             photo_path = f"uploads/trainers/{filename}"
 
-        # Handle Certifications File upload (if present)
+        # Handle Qualification Certificate File upload
         cert_path = None
         if cert_file and cert_file.filename:
             filename = secure_filename(cert_file.filename)
@@ -510,11 +537,20 @@ def enroll_trainer():
             save_path = os.path.join(trainers_upload_dir, filename)
             cert_file.save(save_path)
             cert_path = f"uploads/trainers/{filename}"
-            # Append cert path to certifications list text
             if certifications:
-                certifications += f" | File: {cert_path}"
+                certifications += f" | Certificate File: {cert_path}"
             else:
-                certifications = f"File: {cert_path}"
+                certifications = f"Certificate File: {cert_path}"
+
+        # Handle Government Photo ID File upload
+        govt_id_path = None
+        if govt_id_file and govt_id_file.filename:
+            filename = secure_filename(govt_id_file.filename)
+            timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = f"id_{timestamp}_{filename}"
+            save_path = os.path.join(trainers_upload_dir, filename)
+            govt_id_file.save(save_path)
+            govt_id_path = f"uploads/trainers/{filename}"
 
         # Generate TR-YYYY-XXX ID
         year = datetime.datetime.utcnow().year
@@ -539,6 +575,8 @@ def enroll_trainer():
             id=trainer_id,
             name=name,
             photo=photo_path,
+            govt_id_path=govt_id_path,
+            cert_doc_path=cert_path,
             specialization=specialization,
             experience=experience,
             certifications=certifications,
@@ -549,11 +587,23 @@ def enroll_trainer():
             email=email,
             bio=bio,
             status='Pending',
+            verification_status='PENDING_VERIFICATION',
             is_published=False
         )
 
         db.session.add(new_trainer)
         db.session.commit()
+
+        # Trigger background Gemini Vision OCR & verification
+        def bg_verify_trainer(t_id):
+            with app.app_context():
+                tr = Trainer.query.get(t_id)
+                if tr:
+                    print(f"[BG Verification] Starting OCR and background verification for Trainer {t_id}...")
+                    process_trainer_verification(tr, Trainer, db.session)
+                    print(f"[BG Verification] Completed verification for Trainer {t_id}. Status: {tr.verification_status}")
+
+        threading.Thread(target=bg_verify_trainer, args=(trainer_id,), daemon=True).start()
 
         return jsonify({
             "success": True,
@@ -702,6 +752,71 @@ def manage_admin_trainer(trainer_id):
         db.session.rollback()
         print("Error updating trainer:", str(e))
         return jsonify({"success": False, "error": f"Error: {str(e)}"}), 500
+
+
+@app.route('/api/admin/trainers/<trainer_id>/verify', methods=['POST', 'OPTIONS'])
+def trigger_admin_trainer_verification(trainer_id):
+    if request.method == 'OPTIONS':
+        return jsonify({"success": True}), 200
+    
+    trainer = Trainer.query.get(trainer_id)
+    if not trainer:
+        return jsonify({"success": False, "error": f"Trainer '{trainer_id}' not found"}), 404
+
+    try:
+        ocr_result = process_trainer_verification(trainer, Trainer, db.session)
+        return jsonify({
+            "success": True,
+            "message": f"Verification process completed for trainer '{trainer_id}'",
+            "trainer": trainer.to_dict(),
+            "ocr_result": ocr_result
+        }), 200
+    except Exception as e:
+        print(f"Error running verification for trainer {trainer_id}: {str(e)}")
+        return jsonify({"success": False, "error": f"Verification failed: {str(e)}"}), 500
+
+
+@app.route('/api/admin/trainers/<trainer_id>/decision', methods=['POST', 'OPTIONS'])
+def record_trainer_decision(trainer_id):
+    if request.method == 'OPTIONS':
+        return jsonify({"success": True}), 200
+
+    trainer = Trainer.query.get(trainer_id)
+    if not trainer:
+        return jsonify({"success": False, "error": f"Trainer '{trainer_id}' not found"}), 404
+
+    try:
+        data = request.json or {}
+        action = data.get("action")  # "APPROVE" or "REJECT"
+        verified_by = data.get("verified_by", "Admin")
+        rejection_reason = data.get("rejection_reason", "")
+
+        if action == "APPROVE":
+            trainer.status = "Approved"
+            trainer.verification_status = "VERIFIED_APPROVED"
+            trainer.rejection_reason = None
+            trainer.is_published = True
+        elif action == "REJECT":
+            trainer.status = "Rejected"
+            trainer.verification_status = "VERIFIED_REJECTED"
+            trainer.rejection_reason = rejection_reason or "Document verification failed human audit."
+            trainer.is_published = False
+        else:
+            return jsonify({"success": False, "error": "Invalid action. Must be 'APPROVE' or 'REJECT'"}), 400
+
+        trainer.verified_by = verified_by
+        trainer.verified_at = datetime.datetime.utcnow()
+
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": f"Trainer decision recorded successfully ({action})",
+            "trainer": trainer.to_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 # --------------------- CHATBOT PROXY ENDPOINT ---------------------

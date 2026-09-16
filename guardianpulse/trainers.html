@@ -236,14 +236,21 @@
           <textarea id="trainer-bio-input" name="bio" class="form-control" rows="3" placeholder="Describe your training methods, behavioral philosophy, and care standards..." style="resize: vertical; font-family: var(--font-body);" required></textarea>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 8px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 8px;">
           <div class="filter-group" style="margin-bottom: 0;">
             <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-photo-input">Profile Photo *</label>
             <input type="file" id="trainer-photo-input" name="photo" class="form-control" accept="image/*" required>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">JPG, PNG or WEBP (Max 10MB)</span>
           </div>
           <div class="filter-group" style="margin-bottom: 0;">
-            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-certs-file">Upload Certificates (Optional)</label>
-            <input type="file" id="trainer-certs-file" name="certificates" class="form-control" accept=".pdf,image/*">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-certs-file">Qualification Certificate *</label>
+            <input type="file" id="trainer-certs-file" name="certificates" class="form-control" accept=".pdf,image/*" required>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">PDF, JPG, PNG (Max 10MB)</span>
+          </div>
+          <div class="filter-group" style="margin-bottom: 0;">
+            <label style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem;" for="trainer-id-file">Government Photo ID *</label>
+            <input type="file" id="trainer-id-file" name="govt_id" class="form-control" accept=".pdf,image/*" required>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">PDF, JPG, PNG (Max 10MB)</span>
           </div>
         </div>
 

@@ -24,11 +24,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   const listContainer = document.getElementById("applications-list-container");
   const tabButtons = document.querySelectorAll(".tab-btn");
   
-  // Edit modal elements
+  // Modals
   const editModal = document.getElementById("edit-trainer-modal");
   const closeEditBtn = document.getElementById("close-edit-btn");
   const cancelEditBtn = document.getElementById("cancel-edit-btn");
   const editForm = document.getElementById("edit-trainer-form");
+
+  const auditModal = document.getElementById("verification-audit-modal");
+  const closeAuditBtn = document.getElementById("close-verification-btn");
+  const auditModalContent = document.getElementById("audit-modal-content");
+
+  const rejectModal = document.getElementById("rejection-reason-modal");
+  const cancelRejectBtn = document.getElementById("cancel-reject-modal-btn");
+  const confirmRejectBtn = document.getElementById("confirm-reject-modal-btn");
 
   let allTrainers = [];
   let currentActiveTab = "Pending"; // Pending, Approved, Rejected
@@ -131,6 +139,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const photoUrl = t.photo ? `${serverBase}/${t.photo}` : "assets/placeholder.png";
 
+      // Verification score badge colors
+      const nameScore = t.name_match_score !== null && t.name_match_score !== undefined ? `${t.name_match_score}%` : "Pending OCR";
+      let scoreBg = "rgba(100, 116, 139, 0.15)";
+      let scoreColor = "var(--text-muted)";
+      if (t.name_match_score >= 85) { scoreBg = "rgba(22, 163, 74, 0.15)"; scoreColor = "var(--primary)"; }
+      else if (t.name_match_score >= 60) { scoreBg = "rgba(234, 179, 8, 0.15)"; scoreColor = "#D97706"; }
+      else if (t.name_match_score !== null) { scoreBg = "rgba(239, 68, 68, 0.15)"; scoreColor = "var(--danger)"; }
+
+      let vStatusBg = "rgba(59, 130, 246, 0.15)";
+      let vStatusColor = "#2563EB";
+      if (t.verification_status === "VERIFIED_APPROVED") { vStatusBg = "rgba(22, 163, 74, 0.15)"; vStatusColor = "var(--primary)"; }
+      else if (t.verification_status === "VERIFIED_REJECTED") { vStatusBg = "rgba(239, 68, 68, 0.15)"; vStatusColor = "var(--danger)"; }
+
       let actionButtons = "";
       if (t.status === "Pending") {
         actionButtons = `
@@ -151,21 +172,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       card.innerHTML = `
         <img src="${photoUrl}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover;" alt="Trainer">
-        <div style="flex-grow: 1; min-width: 200px;">
+        <div style="flex-grow: 1; min-width: 240px;">
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <h3 style="font-size: 1.15rem;">${t.name}</h3>
             <span class="badge" style="font-size:0.75rem; background:${t.is_published ? 'rgba(22, 163, 74, 0.15)' : 'rgba(100, 116, 139, 0.15)'}; color:${t.is_published ? 'var(--primary)' : 'var(--text-muted)'};">
               ${t.is_published ? 'Published' : 'Hidden'}
             </span>
+            <span class="badge" style="font-size:0.75rem; background:${vStatusBg}; color:${vStatusColor};">
+              🛡️ ${t.verification_status || 'PENDING'}
+            </span>
+            <span class="badge" style="font-size:0.75rem; background:${scoreBg}; color:${scoreColor}; font-weight:600;">
+              Name Match: ${nameScore}
+            </span>
           </div>
-          <p style="color: var(--accent); font-weight: 600; font-size: 0.85rem; margin-top:2px;">🐾 ${t.specialization}</p>
+          <p style="color: var(--accent); font-weight: 600; font-size: 0.85rem; margin-top:2px;">🐾 ${t.specialization} (${t.experience} Yrs Exp)</p>
           <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display:flex; gap:12px; flex-wrap:wrap;">
             <span>📍 ${t.location}</span>
-            <span>🕒 Exp: ${t.experience} Yrs</span>
             <span>📞 ${t.phone}</span>
+            <span>✉️ ${t.email}</span>
           </div>
+          ${t.rejection_reason ? `<p style="color:var(--danger); font-size:0.8rem; margin-top:4px;">⚠️ Rejection Reason: ${t.rejection_reason}</p>` : ''}
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-outline btn-sm audit-btn" data-id="${t.id}" style="padding:6px 12px; border-color:var(--primary); color:var(--primary);">🛡️ Audit & Docs</button>
           ${actionButtons}
           <button class="btn btn-outline btn-sm edit-btn" data-id="${t.id}" style="padding:6px 12px;">✏️ Edit</button>
           <button class="btn btn-outline btn-sm delete-btn" data-id="${t.id}" style="padding:6px 12px; border-color:var(--danger); color:var(--danger);">🗑️ Delete</button>
@@ -175,12 +204,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Bind button triggers
       const approveBtn = card.querySelector(".approve-btn");
       if (approveBtn) {
-        approveBtn.addEventListener("click", () => updateTrainerStatus(t.id, "Approved", true));
+        approveBtn.addEventListener("click", () => recordDecision(t.id, "APPROVE"));
       }
 
       const rejectBtn = card.querySelector(".reject-btn");
       if (rejectBtn) {
-        rejectBtn.addEventListener("click", () => updateTrainerStatus(t.id, "Rejected", false));
+        rejectBtn.addEventListener("click", () => openRejectModal(t.id));
       }
 
       const togglePublishBtn = card.querySelector(".toggle-publish-btn");
@@ -191,6 +220,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
       }
 
+      card.querySelector(".audit-btn").addEventListener("click", () => openAuditModal(t));
       card.querySelector(".edit-btn").addEventListener("click", () => openEditModal(t));
       card.querySelector(".delete-btn").addEventListener("click", () => deleteTrainer(t.id));
 
@@ -198,16 +228,165 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // 5. Update Status Shortcut
-  async function updateTrainerStatus(id, newStatus, autoPublish) {
+  // 5. Open Audit Verification Modal
+  async function openAuditModal(t) {
+    if (!auditModal || !auditModalContent) return;
+    const serverBase = await getServerBase();
+
+    let ocrParsed = null;
+    if (t.ocr_data_json) {
+      try {
+        ocrParsed = typeof t.ocr_data_json === "string" ? JSON.parse(t.ocr_data_json) : t.ocr_data_json;
+      } catch (e) {
+        ocrParsed = null;
+      }
+    }
+
+    const govtLink = t.govt_id_path ? `${serverBase}/${t.govt_id_path}` : null;
+    const certLink = t.cert_doc_path ? `${serverBase}/${t.cert_doc_path}` : null;
+
+    const nameScoreText = t.name_match_score !== null && t.name_match_score !== undefined ? `${t.name_match_score}%` : "Not Scanned";
+    const expiryText = t.expiry_status || "Not Checked";
+    const duplicateText = t.duplicate_status || "Not Checked";
+    const contactText = t.contact_status || "Not Checked";
+
+    auditModalContent.innerHTML = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid var(--border-glass);">
+          <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Name Match Score</h4>
+          <p style="font-size: 1.4rem; font-weight: 700; color: ${t.name_match_score >= 85 ? 'var(--primary)' : (t.name_match_score >= 60 ? '#D97706' : 'var(--danger)')}; margin: 0;">
+            ${nameScoreText}
+          </p>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">${ocrParsed?.name_match_analysis?.details || 'Fuzzy string match against OCR document name.'}</span>
+        </div>
+
+        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid var(--border-glass);">
+          <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Document Expiry Status</h4>
+          <p style="font-size: 1.2rem; font-weight: 700; color: ${expiryText === 'EXPIRED' ? 'var(--danger)' : 'var(--primary)'}; margin: 0;">
+            ${expiryText}
+          </p>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">${ocrParsed?.govt_expiry_analysis?.details || ocrParsed?.cert_expiry_analysis?.details || 'Expiry date validation.'}</span>
+        </div>
+
+        <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid var(--border-glass);">
+          <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Duplicate Document Check</h4>
+          <p style="font-size: 1.2rem; font-weight: 700; color: ${duplicateText === 'DUPLICATE_FOUND' ? 'var(--danger)' : 'var(--primary)'}; margin: 0;">
+            ${duplicateText}
+          </p>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">${ocrParsed?.govt_duplicate_analysis?.details || 'Database duplicate ID search.'}</span>
+        </div>
+      </div>
+
+      <!-- Applicant Details vs Uploaded Documents -->
+      <div style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-glass); margin-bottom: 24px;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 12px;">📁 Submitted Verification Documents</h3>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+          ${govtLink ? `<a href="${govtLink}" target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:6px;">🪪 View Govt Photo ID (${t.govt_id_path.split('.').pop().toUpperCase()})</a>` : '<span style="color:var(--danger); font-size:0.85rem;">❌ No Government ID Uploaded</span>'}
+          ${certLink ? `<a href="${certLink}" target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:6px;">📜 View Qualification Cert (${t.cert_doc_path.split('.').pop().toUpperCase()})</a>` : '<span style="color:var(--danger); font-size:0.85rem;">❌ No Certificate Uploaded</span>'}
+        </div>
+      </div>
+
+      <!-- Extracted OCR Structured Data -->
+      <div style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-glass); margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+          <h3 style="font-size: 1.1rem; margin: 0;">🤖 Gemini Vision OCR Analysis Output</h3>
+          <button id="modal-rerun-verify-btn" class="btn btn-outline btn-sm" style="border-color:var(--primary); color:var(--primary);">🔄 Re-Run AI Scan</button>
+        </div>
+        <pre style="background: var(--bg-card-opaque); padding: 14px; border-radius: 8px; font-size: 0.8rem; overflow-x: auto; max-height: 250px; border: 1px solid var(--border-glass); font-family: monospace;">${ocrParsed ? JSON.stringify(ocrParsed, null, 2) : "No OCR scan data available yet. Click 'Re-Run AI Scan' above to extract document data with Gemini Vision."}</pre>
+      </div>
+
+      <!-- Human NGO Admin Final Decision -->
+      <div style="border-top: 1px solid var(--border-glass); padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Audit Status: <strong>${t.verification_status || 'PENDING'}</strong> ${t.verified_by ? `(Audited by ${t.verified_by} on ${t.verified_at})` : ''}</span>
+        <div style="display: flex; gap: 12px;">
+          <button id="modal-approve-btn" class="btn btn-primary btn-sm">Approve Application</button>
+          <button id="modal-reject-btn" class="btn btn-outline btn-sm" style="border-color:var(--danger); color:var(--danger);">Reject Application</button>
+        </div>
+      </div>
+    `;
+
+    auditModal.style.display = "flex";
+
+    // Bind modal actions
+    document.getElementById("modal-rerun-verify-btn").addEventListener("click", async () => {
+      const btn = document.getElementById("modal-rerun-verify-btn");
+      btn.disabled = true;
+      btn.textContent = "Scanning with Gemini...";
+      try {
+        const resp = await fetch(`${serverBase}/api/admin/trainers/${t.id}/verify`, { method: "POST" });
+        const resData = await resp.json();
+        if (resp.ok && resData.success) {
+          if (window.GPToast) window.GPToast.success("OCR Scan Complete", "Gemini document analysis updated.");
+          fetchAdminTrainers();
+          openAuditModal(resData.trainer);
+        } else {
+          throw new Error(resData.error || "OCR scan failed.");
+        }
+      } catch (err) {
+        if (window.GPToast) window.GPToast.error("OCR Scan Failed", err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🔄 Re-Run AI Scan";
+      }
+    });
+
+    document.getElementById("modal-approve-btn").addEventListener("click", () => {
+      hideAuditModal();
+      recordDecision(t.id, "APPROVE");
+    });
+
+    document.getElementById("modal-reject-btn").addEventListener("click", () => {
+      hideAuditModal();
+      openRejectModal(t.id);
+    });
+  }
+
+  const hideAuditModal = () => {
+    if (auditModal) auditModal.style.display = "none";
+  };
+
+  if (closeAuditBtn) closeAuditBtn.addEventListener("click", hideAuditModal);
+
+  // 6. Rejection Modal Handlers
+  function openRejectModal(trainerId) {
+    if (!rejectModal) return;
+    document.getElementById("reject-trainer-id").value = trainerId;
+    document.getElementById("rejection-reason-text").value = "";
+    rejectModal.style.display = "flex";
+  }
+
+  const hideRejectModal = () => {
+    if (rejectModal) rejectModal.style.display = "none";
+  };
+
+  if (cancelRejectBtn) cancelRejectBtn.addEventListener("click", hideRejectModal);
+
+  if (confirmRejectBtn) {
+    confirmRejectBtn.addEventListener("click", async () => {
+      const id = document.getElementById("reject-trainer-id").value;
+      const reason = document.getElementById("rejection-reason-text").value.trim();
+
+      if (!reason) {
+        if (window.GPToast) window.GPToast.warning("Required", "Please provide a rejection reason.");
+        return;
+      }
+
+      hideRejectModal();
+      await recordDecision(id, "REJECT", reason);
+    });
+  }
+
+  // 7. Record Human NGO Admin Decision Endpoint
+  async function recordDecision(id, action, rejectionReason = "") {
     try {
       const serverBase = await getServerBase();
-      const response = await fetch(`${serverBase}/api/admin/trainers/${id}`, {
-        method: "PUT",
+      const response = await fetch(`${serverBase}/api/admin/trainers/${id}/decision`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status: newStatus,
-          is_published: autoPublish
+          action: action,
+          verified_by: user.name || user.email || "NGO Rescuer Admin",
+          rejection_reason: rejectionReason
         })
       });
       const data = await response.json();
@@ -215,21 +394,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (response.ok && data.success) {
         if (window.GPToast) {
           window.GPToast.success(
-            "Status Updated",
-            `Trainer application marked as ${newStatus} successfully.`
+            `Trainer ${action === 'APPROVE' ? 'Approved & Published' : 'Rejected'}`,
+            `Application status has been updated to ${action}.`
           );
         }
         fetchAdminTrainers();
       } else {
-        throw new Error(data.error || "Status update failed.");
+        throw new Error(data.error || "Decision recording failed.");
       }
     } catch (err) {
       console.error(err);
-      if (window.GPToast) window.GPToast.error("Update Error", err.message);
+      if (window.GPToast) window.GPToast.error("Action Failed", err.message);
     }
   }
 
-  // 6. Toggle Profile Publication Visibility
+  // 8. Toggle Profile Publication Visibility
   async function updateTrainerPublish(id, isPublished) {
     try {
       const serverBase = await getServerBase();
@@ -257,7 +436,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // 7. Delete Trainer profile
+  // 9. Delete Trainer profile
   async function deleteTrainer(id) {
     if (!confirm("Are you sure you want to permanently delete this trainer record? This cannot be undone.")) return;
 
@@ -282,7 +461,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // 8. Edit Details Modal Handlers
+  // 10. Edit Details Modal Handlers
   function openEditModal(t) {
     if (!editModal) return;
 
@@ -313,9 +492,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   window.addEventListener("click", (e) => {
     if (e.target === editModal) hideEditModal();
+    if (e.target === auditModal) hideAuditModal();
+    if (e.target === rejectModal) hideRejectModal();
   });
 
-  // 9. Save Edit Modal Changes
+  // 11. Save Edit Modal Changes
   if (editForm) {
     editForm.addEventListener("submit", async (e) => {
       e.preventDefault();
