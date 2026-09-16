@@ -16,6 +16,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const openEnrollBtn = document.getElementById("open-enrollment-btn");
   const closeEnrollBtn = document.getElementById("close-enrollment-btn");
 
+  // Show NGO Admin Panel link if logged in as NGO
+  if (window.GPAuth) {
+    window.GPAuth.waitForUser().then(user => {
+      const ngoBtn = document.getElementById("ngo-admin-manage-btn");
+      if (user && user.role === "ngo" && ngoBtn) {
+        ngoBtn.style.display = "inline-flex";
+      }
+    }).catch(() => {});
+  }
+
   let allTrainers = [];
 
   // 1. Fetch Trainers from Flask API
