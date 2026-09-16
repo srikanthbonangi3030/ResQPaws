@@ -65,6 +65,8 @@ class Trainer(db.Model):
     expiry_status = db.Column(db.String(50), nullable=True)
     duplicate_status = db.Column(db.String(50), nullable=True)
     contact_status = db.Column(db.String(50), nullable=True)
+    authenticity_status = db.Column(db.String(50), default='UNAUDITED', nullable=True)  # GENUINE, SUSPICIOUS, FAKE_FLAGGED
+    risk_score = db.Column(db.Integer, default=0, nullable=True)  # 0 to 100 risk score
     rejection_reason = db.Column(db.Text, nullable=True)
     verified_by = db.Column(db.String(100), nullable=True)
     verified_at = db.Column(db.DateTime, nullable=True)
@@ -95,6 +97,8 @@ class Trainer(db.Model):
             "expiry_status": self.expiry_status,
             "duplicate_status": self.duplicate_status,
             "contact_status": self.contact_status,
+            "authenticity_status": self.authenticity_status,
+            "risk_score": self.risk_score,
             "rejection_reason": self.rejection_reason,
             "verified_by": self.verified_by,
             "verified_at": self.verified_at.isoformat() if self.verified_at else None,

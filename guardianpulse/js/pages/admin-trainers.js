@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const photoUrl = t.photo ? `${serverBase}/${t.photo}` : "assets/placeholder.png";
 
-      // Verification score badge colors
+      // Verification score badge colors & Fraud badges
       const nameScore = t.name_match_score !== null && t.name_match_score !== undefined ? `${t.name_match_score}%` : "Pending OCR";
       let scoreBg = "rgba(100, 116, 139, 0.15)";
       let scoreColor = "var(--text-muted)";
@@ -150,7 +150,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       let vStatusBg = "rgba(59, 130, 246, 0.15)";
       let vStatusColor = "#2563EB";
       if (t.verification_status === "VERIFIED_APPROVED") { vStatusBg = "rgba(22, 163, 74, 0.15)"; vStatusColor = "var(--primary)"; }
-      else if (t.verification_status === "VERIFIED_REJECTED") { vStatusBg = "rgba(239, 68, 68, 0.15)"; vStatusColor = "var(--danger)"; }
+      else if (t.verification_status === "VERIFIED_REJECTED" || t.verification_status === "FLAGGED_FAKE") { vStatusBg = "rgba(239, 68, 68, 0.15)"; vStatusColor = "var(--danger)"; }
+
+      let authBadge = "";
+      if (t.risk_score >= 70 || t.authenticity_status === "FAKE_FLAGGED") {
+        authBadge = `<span class="badge" style="font-size:0.75rem; background:rgba(239, 68, 68, 0.2); color:var(--danger); font-weight:700;">🚨 HIGH RISK FAKE (${t.risk_score || 85}% Risk)</span>`;
+      } else if (t.risk_score >= 35 || t.authenticity_status === "SUSPICIOUS") {
+        authBadge = `<span class="badge" style="font-size:0.75rem; background:rgba(234, 179, 8, 0.2); color:#D97706; font-weight:600;">⚠️ SUSPICIOUS DOC (${t.risk_score}% Risk)</span>`;
+      } else if (t.authenticity_status === "GENUINE") {
+        authBadge = `<span class="badge" style="font-size:0.75rem; background:rgba(22, 163, 74, 0.15); color:var(--primary);">🛡️ GENUINE DOC</span>`;
+      }
 
       let actionButtons = "";
       if (t.status === "Pending") {
@@ -181,6 +190,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <span class="badge" style="font-size:0.75rem; background:${vStatusBg}; color:${vStatusColor};">
               🛡️ ${t.verification_status || 'PENDING'}
             </span>
+            ${authBadge}
             <span class="badge" style="font-size:0.75rem; background:${scoreBg}; color:${scoreColor}; font-weight:600;">
               Name Match: ${nameScore}
             </span>
@@ -250,7 +260,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     const duplicateText = t.duplicate_status || "Not Checked";
     const contactText = t.contact_status || "Not Checked";
 
+    const fraudAssessment = ocrParsed?.authenticity_assessment || {};
+    const fraudIndicators = fraudAssessment.fraud_indicators || [];
+    const riskScore = t.risk_score || fraudAssessment.overall_risk_score || 0;
+
     auditModalContent.innerHTML = `
+      <!-- AI Forensic Fraud & Fake Inspection Banner -->
+      <div style="background: ${riskScore >= 70 ? 'rgba(239, 68, 68, 0.1)' : (riskScore >= 35 ? 'rgba(234, 179, 8, 0.1)' : 'rgba(22, 163, 74, 0.08)')}; border: 1.5px solid ${riskScore >= 70 ? 'var(--danger)' : (riskScore >= 35 ? '#D97706' : 'var(--primary)')}; padding: 20px; border-radius: 12px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap:10px;">
+          <h3 style="font-size: 1.15rem; margin: 0; color: ${riskScore >= 70 ? 'var(--danger)' : (riskScore >= 35 ? '#D97706' : 'var(--primary)')};">
+            ${riskScore >= 70 ? '🚨 HIGH RISK FAKE / FORGERY DETECTED' : (riskScore >= 35 ? '⚠️ SUSPICIOUS DOCUMENT FLAG' : '🛡️ AI AUTHENTICITY VERDICT: GENUINE')}
+          </h3>
+          <span style="font-size: 0.9rem; font-weight: 700; color: ${riskScore >= 70 ? 'var(--danger)' : (riskScore >= 35 ? '#D97706' : 'var(--primary)')};">
+            Fraud Risk Rating: ${riskScore}%
+          </span>
+        </div>
+        
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+          Gemini AI Forensic Inspection scans document pixels, typography, seal/logo integrity, digital alteration artifacts, cut-and-paste anomalies, and duplicate database records.
+        </p>
+
+        ${fraudIndicators.length > 0 ? `
+          <div style="background: var(--bg-card-opaque); padding: 12px 16px; border-radius: 8px; border-left: 4px solid var(--danger); margin-bottom: 16px;">
+            <strong style="font-size: 0.85rem; color: var(--danger); display: block; margin-bottom: 6px;">Detected Anomaly & Fraud Flags:</strong>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: var(--text-main);">
+              ${fraudIndicators.map(fi => `<li style="margin-bottom: 4px;">${fi}</li>`).join('')}
+            </ul>
+          </div>
+        ` : '<p style="font-size: 0.85rem; color: var(--primary); margin-bottom: 12px;">✓ No visual manipulation, digital editing, or duplicate flags detected.</p>'}
+
+        ${riskScore >= 35 ? `
+          <button id="modal-quick-reject-fake-btn" class="btn btn-primary btn-sm" style="background: var(--danger); border-color: var(--danger); font-size: 0.85rem;">
+            🚨 Quick Reject Application (Flagged Fake / Suspicious)
+          </button>
+        ` : ''}
+      </div>
+
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;">
         <div style="background: var(--bg-card); padding: 16px; border-radius: 12px; border: 1px solid var(--border-glass);">
           <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Name Match Score</h4>
@@ -289,7 +334,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <!-- Extracted OCR Structured Data -->
       <div style="background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-glass); margin-bottom: 24px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
-          <h3 style="font-size: 1.1rem; margin: 0;">🤖 Gemini Vision OCR Analysis Output</h3>
+          <h3 style="font-size: 1.1rem; margin: 0;">🤖 Gemini Vision OCR & Forensic Output</h3>
           <button id="modal-rerun-verify-btn" class="btn btn-outline btn-sm" style="border-color:var(--primary); color:var(--primary);">🔄 Re-Run AI Scan</button>
         </div>
         <pre style="background: var(--bg-card-opaque); padding: 14px; border-radius: 8px; font-size: 0.8rem; overflow-x: auto; max-height: 250px; border: 1px solid var(--border-glass); font-family: monospace;">${ocrParsed ? JSON.stringify(ocrParsed, null, 2) : "No OCR scan data available yet. Click 'Re-Run AI Scan' above to extract document data with Gemini Vision."}</pre>
@@ -306,6 +351,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     `;
 
     auditModal.style.display = "flex";
+
+    // Bind Quick Reject Fake button if present
+    const quickRejectBtn = document.getElementById("modal-quick-reject-fake-btn");
+    if (quickRejectBtn) {
+      quickRejectBtn.addEventListener("click", async () => {
+        hideAuditModal();
+        const autoReason = fraudIndicators.length > 0 
+          ? `AI Forensic Document Fraud Detected: ${fraudIndicators.join('; ')}`
+          : `AI Flagged Document Fraud / Suspicious Document (Risk Score ${riskScore}%).`;
+        await recordDecision(t.id, "REJECT", autoReason);
+      });
+    }
 
     // Bind modal actions
     document.getElementById("modal-rerun-verify-btn").addEventListener("click", async () => {

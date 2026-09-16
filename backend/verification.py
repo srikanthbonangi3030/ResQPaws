@@ -255,6 +255,53 @@ def process_trainer_verification(trainer, Trainer_model, db_session):
     contact_res = check_contact_validity(trainer.phone, trainer.email)
     contact_status_str = "VALID" if (contact_res["email_valid"] and contact_res["phone_valid"]) else "INVALID_FORMAT"
 
+    # 7. Forensic Fraud & Forgery Analysis Aggregation
+    govt_data = govt_ocr_result.get("extracted_data", {}) if (govt_ocr_result and govt_ocr_result.get("success")) else {}
+    cert_data = cert_ocr_result.get("extracted_data", {}) if (cert_ocr_result and cert_ocr_result.get("success")) else {}
+
+    govt_risk = int(govt_data.get("fraud_risk_score", 0) or 0)
+    cert_risk = int(cert_data.get("fraud_risk_score", 0) or 0)
+    
+    fraud_indicators = []
+    if govt_data.get("fraud_indicators"):
+        fraud_indicators.extend([f"Govt ID: {ind}" for ind in govt_data["fraud_indicators"]])
+    if cert_data.get("fraud_indicators"):
+        fraud_indicators.extend([f"Certificate: {ind}" for ind in cert_data["fraud_indicators"]])
+
+    if govt_data.get("authenticity_verdict") in ["HIGH_RISK_FAKE", "SUSPICIOUS"]:
+        fraud_indicators.append(f"Govt ID Flagged as {govt_data.get('authenticity_verdict')}: {govt_data.get('forensic_details', '')}")
+    if cert_data.get("authenticity_verdict") in ["HIGH_RISK_FAKE", "SUSPICIOUS"]:
+        fraud_indicators.append(f"Certificate Flagged as {cert_data.get('authenticity_verdict')}: {cert_data.get('forensic_details', '')}")
+
+    # Risk penalties
+    base_risk = max(govt_risk, cert_risk)
+    if name_match_res["score"] < 60.0:
+        base_risk = max(base_risk, 75)
+        fraud_indicators.append(f"Critical Name Mismatch ({name_match_res['score']}% similarity between application and document)")
+    elif name_match_res["score"] < 85.0:
+        base_risk = max(base_risk, 45)
+        fraud_indicators.append(f"Partial Name Match ({name_match_res['score']}% similarity)")
+
+    if is_duplicate:
+        base_risk = max(base_risk, 85)
+        fraud_indicators.append(f"Duplicate Document Number match against Trainer {dup_govt_res.get('matched_trainer_id') or dup_cert_res.get('matched_trainer_id')}")
+
+    if expiry_status_str == "EXPIRED":
+        base_risk = max(base_risk, 60)
+        fraud_indicators.append("Expired Document Uploaded")
+
+    overall_risk_score = min(100, max(0, base_risk))
+
+    if overall_risk_score >= 70:
+        auth_status = "FAKE_FLAGGED"
+        verif_status = "FLAGGED_FAKE"
+    elif overall_risk_score >= 35:
+        auth_status = "SUSPICIOUS"
+        verif_status = "PENDING_ADMIN_REVIEW"
+    else:
+        auth_status = "GENUINE"
+        verif_status = "PENDING_ADMIN_REVIEW"
+
     # Aggregate OCR payload
     combined_ocr_payload = {
         "processed_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -265,7 +312,14 @@ def process_trainer_verification(trainer, Trainer_model, db_session):
         "cert_expiry_analysis": cert_expiry_res,
         "govt_duplicate_analysis": dup_govt_res,
         "cert_duplicate_analysis": dup_cert_res,
-        "contact_analysis": contact_res
+        "contact_analysis": contact_res,
+        "authenticity_assessment": {
+            "authenticity_status": auth_status,
+            "overall_risk_score": overall_risk_score,
+            "fraud_indicators": fraud_indicators,
+            "govt_id_verdict": govt_data.get("authenticity_verdict", "UNCHECKED"),
+            "cert_verdict": cert_data.get("authenticity_verdict", "UNCHECKED")
+        }
     }
 
     # Update database record
@@ -274,7 +328,9 @@ def process_trainer_verification(trainer, Trainer_model, db_session):
     trainer.expiry_status = expiry_status_str
     trainer.duplicate_status = duplicate_status_str
     trainer.contact_status = contact_status_str
-    trainer.verification_status = "PENDING_ADMIN_REVIEW"
+    trainer.authenticity_status = auth_status
+    trainer.risk_score = overall_risk_score
+    trainer.verification_status = verif_status
 
     try:
         db_session.commit()

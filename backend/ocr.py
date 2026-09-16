@@ -76,8 +76,9 @@ def analyze_document_with_gemini(file_path, doc_category="Government Photo ID / 
         }
 
     prompt = (
-        f"You are an AI Document Verification Specialist analyzing a submission for category '{doc_category}'. "
-        "Perform OCR and structured extraction from this document. "
+        f"You are a Forensic Document Inspection AI and Fraud Scanner analyzing a submission for category '{doc_category}'. "
+        "Perform OCR entity extraction AND forensic authenticity analysis. Inspect the image for forgery, digital alterations, font mismatches, "
+        "cut-and-paste artifacts, fake seals, or unaccredited fake certificates.\n"
         "Extract the following fields carefully in strict JSON format:\n"
         "{\n"
         '  "document_type": "<e.g., Aadhaar, Driving License, Passport, Vet Degree, Pet Trainer Certificate, Government Photo ID, Unknown>",\n'
@@ -88,6 +89,11 @@ def analyze_document_with_gemini(file_path, doc_category="Government Photo ID / 
         '  "expiry_date": "<YYYY-MM-DD or null>",\n'
         '  "is_readable": true or false,\n'
         '  "confidence_score": <number from 0 to 100 representing clarity and legibility>,\n'
+        '  "is_suspicious_or_fake": true or false,\n'
+        '  "authenticity_verdict": "<GENUINE, SUSPICIOUS, or HIGH_RISK_FAKE>",\n'
+        '  "fraud_risk_score": <number from 0 to 100 where 0 is clean/genuine and 100 is definitely fake/edited>,\n'
+        '  "fraud_indicators": ["<list of detected anomalies or suspicious indicators, e.g. digital editing artifacts, font mismatch, fake seal, unrecognized issuer>"],\n'
+        '  "forensic_details": "<detailed forensic reasoning for the authenticity verdict>",\n'
         '  "raw_text_summary": "<brief summary of key visible text on document>"\n'
         "}\n"
         "Do not include markdown codeblocks around JSON. Return raw JSON string only."
