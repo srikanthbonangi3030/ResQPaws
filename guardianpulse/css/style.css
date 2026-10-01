@@ -1,8 +1,8 @@
-/* GuardianPulse Core Stylesheet */
+/* GuardianPulse Global & Theme Stylesheet */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Common tokens */
+  /* Common Brand Tokens */
   --primary: #16A34A;
   --primary-rgb: 22, 163, 74;
   --primary-hover: #15803D;
@@ -23,11 +23,11 @@
 
   /* Light Theme variables (default) */
   --bg-main: #F8FAFC;
-  --bg-card: rgba(255, 255, 255, 0.65);
+  --bg-card: rgba(255, 255, 255, 0.75);
   --bg-card-opaque: #FFFFFF;
-  --bg-navbar: rgba(255, 255, 255, 0.8);
+  --bg-navbar: rgba(255, 255, 255, 0.85);
   --border-card: rgba(226, 232, 240, 0.8);
-  --border-glass: rgba(255, 255, 255, 0.4);
+  --border-glass: rgba(255, 255, 255, 0.5);
   --text-main: #0F172A;
   --text-muted: #64748B;
   --text-inverse: #FFFFFF;
@@ -46,10 +46,10 @@
 [data-theme="dark"] {
   /* Dark Theme variables */
   --bg-main: #070B13;
-  --bg-card: rgba(15, 23, 42, 0.6);
+  --bg-card: rgba(15, 23, 42, 0.65);
   --bg-card-opaque: #0F172A;
-  --bg-navbar: rgba(7, 11, 19, 0.8);
-  --border-card: rgba(255, 255, 255, 0.05);
+  --bg-navbar: rgba(7, 11, 19, 0.85);
+  --border-card: rgba(255, 255, 255, 0.08);
   --border-glass: rgba(255, 255, 255, 0.08);
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
@@ -64,15 +64,16 @@
   --input-focus: #16A34A;
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 html {
   background-color: var(--bg-main);
-  transition: background-color 0.2s ease;
+  color: var(--text-main);
 }
 
 body {
@@ -82,7 +83,7 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   opacity: 1;
-  transition: opacity 0.15s ease-in-out, background-color 0.2s ease, color 0.2s ease;
+  min-height: 100vh;
   animation: pageEntrance 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -106,6 +107,10 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-main);
   font-weight: 700;
   line-height: 1.25;
+}
+
+p, span, label, td, th {
+  color: inherit;
 }
 
 a {

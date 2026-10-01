@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResQPaws Website Screenshots & Results Gallery</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0F172A;
+      color: #F8FAFC;
+      margin: 0;
+      padding: 30px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #16A34A;
+      text-align: center;
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94A3B8;
+      margin-bottom: 40px;
+    }
+    .card {
+      background-color: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    .card-title {
+      font-size: 1.4rem;
+      color: #38BDF8;
+      margin-top: 0;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #16A34A;
+      padding-bottom: 8px;
+    }
+    .img-wrapper {
+      width: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid #475569;
+      margin-bottom: 20px;
+      background: #070B13;
+    }
+    .img-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .explanation {
+      background: #0F172A;
+      padding: 16px 20px;
+      border-radius: 8px;
+      border-left: 4px solid #16A34A;
+      color: #E2E8F0;
+      font-size: 0.95rem;
+    }
+    .explanation ul {
+      margin: 8px 0 0 0;
+      padding-left: 20px;
+    }
+    .folder-path {
+      background: #334155;
+      padding: 12px 18px;
+      border-radius: 8px;
+      word-break: break-all;
+      font-family: monospace;
+      color: #F1F5F9;
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>📸 resQpaws Website Screenshots & Output Gallery</h1>
+    <p class="subtitle">Official Visual Results Document for Academic & Technical Project Review</p>
+
+    <div class="folder-path">
+      📁 <strong>Physical File Explorer Path to Screenshot PNG Images:</strong><br>
+      <code>C:\Users\hp\OneDrive\Documents\resqpaws\guardianpulse\assets\screenshots\</code>
+    </div>
+
+    <!-- Figure 6.1 -->
+    <div class="card">
+      <h2 class="card-title">Figure 6.1: Landing Page & Anti-FOUC Theme Engine Output (`index.html`)</h2>
+      <div class="img-wrapper">
+        <img src="assets/screenshots/index.png" alt="Landing Page Screenshot">
+      </div>
+      <div class="explanation">
+        <strong>Technical & Visual Explanation:</strong>
+        <ul>
+          <li><strong>Navigation & Header:</strong> Features the branded logo <code>resQpaws</code>, dynamic Trilingual Language Selector (English, Telugu, Hindi), Dark/Light theme toggle, and Login/Logout buttons.</li>
+          <li><strong>Anti-FOUC Engine:</strong> Prevents dark mode white background flashes by executing an inline pre-render script in HTML <code>&lt;head&gt;</code> before CSS loads.</li>
+          <li><strong>Hero Action Buttons:</strong> Provides quick links to <code>🚨 Report Emergency</code> and <code>🐕 Find Verified Trainers</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Figure 6.2 -->
+    <div class="card">
+      <h2 class="card-title">Figure 6.2: Emergency Animal Distress Reporting & Interactive Map (`report.html`)</h2>
+      <div class="img-wrapper">
+        <img src="assets/screenshots/report.png" alt="Emergency Reporting Screenshot">
+      </div>
+      <div class="explanation">
+        <strong>Technical & Visual Explanation:</strong>
+        <ul>
+          <li><strong>Leaflet Pinboard Map:</strong> Bystanders tap/click on the Leaflet.js OpenStreetMap interface to auto-populate exact Latitude & Longitude coordinates.</li>
+          <li><strong>Incident Data Input:</strong> Captures animal species category, detailed injury symptoms, scene photos, and caller phone number.</li>
+          <li><strong>AI Severity Estimation:</strong> Calculates priority rating (Critical, High, Medium, Low) and confidence rating (e.g., <em>Critical Priority - 94% AI Confidence</em>).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Figure 6.3 -->
+    <div class="card">
+      <h2 class="card-title">Figure 6.3: Real-Time NGO Emergency Control Panel & Dispatch Grid (`ngo-dashboard.html`)</h2>
+      <div class="img-wrapper">
+        <img src="assets/screenshots/ngo-dashboard.png" alt="NGO Control Dashboard Screenshot">
+      </div>
+      <div class="explanation">
+        <strong>Technical & Visual Explanation:</strong>
+        <ul>
+          <li><strong>Rescuer Availability Manager:</strong> Toggles NGO operational status between Available (Green), Busy (Yellow), and Offline (Red).</li>
+          <li><strong>Live Incident Pinboard Map:</strong> Renders color-coded map markers representing emergency rescue locations.</li>
+          <li><strong>Dispatch Workflow:</strong> Rescuers click <em>Accept Rescue</em> or <em>Mark Resolved</em> to update dispatch status in real time.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Figure 6.4 -->
+    <div class="card">
+      <h2 class="card-title">Figure 6.4: Rescue Incident Status Tracker (`track.html`)</h2>
+      <div class="img-wrapper">
+        <img src="assets/screenshots/track.png" alt="Rescue Status Tracker Screenshot">
+      </div>
+      <div class="explanation">
+        <strong>Technical & Visual Explanation:</strong>
+        <ul>
+          <li><strong>Citizen Transparency Timeline:</strong> Renders a step-by-step progress timeline: <code>Report Submitted</code> &rarr; <code>NGO Dispatched</code> &rarr; <code>Rescuer On Scene</code> &rarr; <code>Rescued & Safe</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Figure 6.5 -->
+    <div class="card">
+      <h2 class="card-title">Figure 6.5: Rescued Pet Adoption Directory & Application Modal (`adopt.html`)</h2>
+      <div class="img-wrapper">
+        <img src="assets/screenshots/adopt.png" alt="Pet Adoption Directory Screenshot">
+      </div>
+      <div class="explanation">
+        <strong>Technical & Visual Explanation:</strong>
+        <ul>
+          <li><strong>Adoption Inventory Grid:</strong> Showcases rescued animals in shelter care with multi-facet filters (species, age, gender, size, temperament).</li>
+          <li><strong>Application Modal:</strong> Captures prospective adopter housing type, pet experience, and contact info.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Figure 6.6 -->
+    <div class="card">
+      <h2 class="card-title">Figure 6.6: Lost & Found Animal Matching & Status Migration (`lost-found.html`)</h2>
+      <div class="img-wrapper">
+        <img src="assets/screenshots/lost-found.png" alt="Lost & Found Animals Screenshot">
+      </div>
+      <div class="explanation">
+        <strong>Technical & Visual Explanation:</strong>
+        <ul>
+          <li><strong>Dual Tab System:</strong> Owner lost pet reports vs citizen found animal sighting reports.</li>
+          <li><strong>NGO Status Migration:</strong> Features 1-click action allowing NGO admins to transition animal records directly from <em>Lost</em> status to <em>Found / Rescued</em>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Figure 6.7 -->
+    <div class="card">
+      <h2 class="card-title">Figure 6.7: Animal Trainer Public Directory & BGV Trust Badges (`trainers.html`)</h2>
+      <div class="img-wrapper">
+        <img src="assets/screenshots/trainers.png" alt="Trainer Public Directory Screenshot">
+      </div>
+      <div class="explanation">
+        <strong>Technical & Visual Explanation:</strong>
+        <ul>
+          <li><strong>🛡️ BGV Verified Badges:</strong> Displays green trust badges confirming Gemini Vision AI OCR parsing and NGO background verification.</li>
+          <li><strong>Multi-File Upload Modal:</strong> Supports Profile Photo, Government Photo ID, and Qualification Certificate uploads.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Figure 6.8 -->
+    <div class="card">
+      <h2 class="card-title">Figure 6.8: NGO Admin Trainer Verification & Gemini AI Audit Modal (`admin-trainers.html`)</h2>
+      <div class="img-wrapper">
+        <img src="assets/screenshots/admin-trainers.png" alt="Admin Verification Dashboard Screenshot">
+      </div>
+      <div class="explanation">
+        <strong>Technical & Visual Explanation:</strong>
+        <ul>
+          <li><strong>Status Tabs:</strong> Categorizes applications into <em>Pending Applications</em>, <em>Approved / Published</em>, and <em>Rejected Entries</em>.</li>
+          <li><strong>Side-by-Side Audit Modal:</strong> Direct document preview links, Gemini AI Forensic Fraud Analysis Panel (Risk Rating 0–100%), and 1-click Quick Reject button.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
