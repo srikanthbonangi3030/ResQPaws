@@ -475,4 +475,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  // Diagnostic Rules Modal toggle handler
+  const toggleRulesBtn = document.getElementById("toggle-rules-btn");
+  const rulesModal = document.getElementById("diagnostic-rules-modal");
+  const closeRulesBtn = document.getElementById("close-rules-modal-btn");
+  const closeRulesBottomBtn = document.getElementById("close-rules-modal-bottom-btn");
+
+  if (toggleRulesBtn && rulesModal) {
+    toggleRulesBtn.addEventListener("click", () => {
+      rulesModal.style.display = "flex";
+    });
+  }
+
+  const closeRulesModal = () => {
+    if (rulesModal) rulesModal.style.display = "none";
+  };
+
+  if (closeRulesBtn) closeRulesBtn.addEventListener("click", closeRulesModal);
+  if (closeRulesBottomBtn) closeRulesBottomBtn.addEventListener("click", closeRulesModal);
+
+  if (rulesModal) {
+    rulesModal.addEventListener("click", (e) => {
+      if (e.target === rulesModal) {
+        closeRulesModal();
+      }
+    });
+  }
 });

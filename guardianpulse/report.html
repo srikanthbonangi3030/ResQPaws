@@ -94,194 +94,214 @@
 
   <!-- Form content -->
   <main class="page-section container-wide" id="report-form-panel">
-    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px;">
+    <div style="max-width: 680px; margin: 0 auto;">
       
-      <!-- Left Column: Report Form details -->
-      <div>
-        <div class="glass-card no-lift">
-          <h2 style="font-size: 1.8rem; margin-bottom: 24px;">Incident Details</h2>
-          
-          <form id="report-emergency-form">
-            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-              <div class="form-group">
-                <label class="form-label">Animal Type</label>
-                <select id="animal-type" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
-                  <option value="Dog">Dog</option>
-                  <option value="Cat">Cat</option>
-                  <option value="Cow">Cow</option>
-                  <option value="Bird">Bird</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Emergency Type</label>
-                <select id="emergency-type" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
-                  <option value="Accident / Hit & Run">Accident / Hit & Run</option>
-                  <option value="Severe Injury">Severe Injury</option>
-                  <option value="Sickness / Disease">Sickness / Disease</option>
-                  <option value="Abuse / Cruelty">Abuse / Cruelty</option>
-                  <option value="Stray / Trapped">Stray / Trapped</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-              <div class="form-group">
-                <label class="form-label">Severity Level</label>
-                <select id="severity" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
-                  <option value="Critical">Critical</option>
-                  <option value="High">High</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Low">Low</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Reporter Contact Number</label>
-                <input type="text" id="contact-number" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" placeholder="+91 XXXXX XXXXX" required>
-              </div>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 16px;">
-              <label class="form-label">Location Address Description</label>
-              <input type="text" id="location-name" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" placeholder="E.g., Near Indiranagar metro station" required>
-            </div>
-
-            <!-- Coordinate Selectors Map integration -->
-            <div class="form-group" style="margin-bottom: 16px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-                <label class="form-label" style="margin:0;">Select Pin Location on Map</label>
-                <strong id="location-coords-display" style="font-size:0.85rem; color:var(--primary);">Detecting coordinates...</strong>
-              </div>
-
-              <!-- Address Search Input Box -->
-              <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                <input type="text" id="map-address-search" class="form-control" style="flex-grow: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main); font-size: 0.9rem;" placeholder="Search location by address (e.g. Indiranagar, Bangalore)...">
-                <button type="button" id="btn-address-search" class="btn btn-outline btn-sm" style="border-radius: 8px; padding: 8px 16px; font-size: 0.85rem;">Search</button>
-              </div>
-              
-              <div class="map-wrapper" style="height: 300px; margin-bottom: 16px; border-radius: 12px; overflow: hidden; border: 1px solid var(--input-border);">
-                <div id="report-map" style="width: 100%; height: 100%;"></div>
-              </div>
-              
-              <input type="hidden" id="report-lat" required>
-              <input type="hidden" id="report-lng" required>
-            </div>
-
-            <!-- Upload Animal image -->
-            <div class="form-group" style="margin-bottom: 16px;">
-              <label class="form-label">Upload Animal Image (Optional)</label>
-              <input type="file" id="report-image-input" class="form-control" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" accept="image/*">
-              
-              <!-- Image preview box -->
-              <div id="upload-preview-container" style="display: none; margin-top: 16px;">
-                <div class="scanner-container" style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--input-border);">
-                  <img id="report-image-preview" class="scanner-image" style="width: 100%; height: auto; max-height: 300px; object-fit: cover;" src="" alt="Scan Preview">
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 16px;">
-              <label class="form-label">Incident Description & Animal Condition</label>
-              <textarea id="description" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" rows="4" placeholder="Briefly describe the animal's condition (e.g., bleeding leg, limping slowly, hit by car...)" required></textarea>
-            </div>
-
-            <button type="submit" id="report-submit-btn" class="btn btn-primary" style="width: 100%; padding: 14px 24px; font-size:1.1rem; margin-top:16px;">
-              Submit Report & Run AI Scan
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Right Column: AI simulated output pane -->
-      <div>
-        <div id="ai-progress-panel" class="glass-card no-lift" style="display: none; height: 100%;">
-          <h2 style="font-size: 1.8rem; margin-bottom: 12px; display:flex; align-items:center; gap:10px;">
-            AI-Assisted Assessment
-            <div class="spinner" style="width:20px; height:20px; border-width:2px;"></div>
-          </h2>
-          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 24px;">Analyzing incident parameters, processing files, and contacting nearest clinics...</p>
-          
-          <div style="font-family: monospace; background-color: rgba(0,0,0,0.03); border: 1px solid var(--border-card); padding: 16px; border-radius: 8px; margin-bottom: 24px;">
-            <p id="ai-status-text" style="color:var(--primary); font-weight:700; margin:0;">Initializing assessment...</p>
-          </div>
-
-          <!-- Progressive Loading Steps List -->
-          <div id="progressive-loading-steps" style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px; border-top: 1px solid var(--border-card); padding-top: 20px;">
-            <div class="step-item" id="step-location" style="display:flex; align-items:center; gap:10px; color:var(--text-muted);">
-              <span id="step-location-icon">⚪</span> <span>Detecting your location...</span>
-            </div>
-            <div class="step-item" id="step-report" style="display:flex; align-items:center; gap:10px; color:var(--text-muted);">
-              <span id="step-report-icon">⚪</span> <span>Submitting emergency report...</span>
-            </div>
-            <div class="step-item" id="step-places" style="display:flex; align-items:center; gap:10px; color:var(--text-muted);">
-              <span id="step-places-icon">⚪</span> <span>Searching nearby veterinary hospitals...</span>
-            </div>
-            <div class="step-item" id="step-haversine" style="display:flex; align-items:center; gap:10px; color:var(--text-muted);">
-              <span id="step-haversine-icon">⚪</span> <span>Calculating nearest hospitals...</span>
-            </div>
-            <div class="step-item" id="step-done" style="display:flex; align-items:center; gap:10px; color:var(--text-muted);">
-              <span id="step-done-icon">⚪</span> <span id="step-done-text">Found veterinary hospitals.</span>
-            </div>
-          </div>
-
-          <!-- Analysis Results list (Initially hidden, revealed on AI compile success) -->
-          <div id="ai-results-grid" style="display: none; margin-top: 20px; border-top: 1px solid var(--border-card); padding-top: 20px;">
-            <h3 style="margin-bottom: 16px; border-bottom: 1px solid var(--border-card); padding-bottom: 8px;">Analysis Metrics</h3>
-            
-            <div style="display: flex; flex-direction: column; gap: 14px;">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:500;">Assigned Priority:</span>
-                <span id="ai-result-severity" class="badge"></span>
-              </div>
-              
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:500;">AI Confidence Score:</span>
-                <strong id="ai-result-confidence" style="color:var(--primary);"></strong>
-              </div>
-
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:500;">Injury Detected:</span>
-                <span id="ai-result-injury" style="font-weight: 600;"></span>
-              </div>
-
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:500;">Blood Visible:</span>
-                <span id="ai-result-blood" style="font-weight: 600;"></span>
-              </div>
-
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:500;">Mobility Impairment:</span>
-                <span id="ai-result-mobility" style="font-weight: 600;"></span>
-              </div>
-
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:500;">Distress Rating:</span>
-                <span id="ai-result-distress" style="font-weight: 600;"></span>
-              </div>
-              
-              <div style="border-top:1px solid var(--border-card); padding-top:14px; margin-top:6px;">
-                <span style="font-weight:500; display:block; margin-bottom:4px;">Diagnostic Condition Summary:</span>
-                <p id="ai-result-condition" style="font-size:0.9rem; color:var(--text-muted); line-height: 1.5;"></p>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Report Form Card -->
+      <div class="glass-card no-lift">
+        <h2 style="font-size: 1.8rem; margin-bottom: 24px;">Incident Details</h2>
         
-        <!-- Quick Help static panel -->
-        <div id="ai-help-panel" class="glass-card no-lift">
-          <h2 style="font-size:1.6rem; color:var(--primary); margin-bottom:12px;">Diagnostic Rules</h2>
-          <ul style="display:flex; flex-direction:column; gap:12px; color:var(--text-muted); font-size:0.95rem;">
-            <li>🔴 <strong>Critical:</strong> Severe open fractures, heavy blood discharge, or unconscious state. Immediate dispatch triggered.</li>
-            <li>🟠 <strong>High:</strong> Noticeable bleeding cuts or severe limping issues. NGO requested within 1 hour.</li>
-            <li>🟡 <strong>Medium:</strong> Rashes, sickness, malnutrition or dehydration signs. NGO requested within 24 hours.</li>
-            <li>🟢 <strong>Low:</strong> Found healthy but stranded in observation regions.</li>
-          </ul>
+        <form id="report-emergency-form">
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="form-group">
+              <label class="form-label">Animal Type</label>
+              <select id="animal-type" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
+                <option value="Dog">Dog</option>
+                <option value="Cat">Cat</option>
+                <option value="Cow">Cow</option>
+                <option value="Bird">Bird</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Emergency Type</label>
+              <select id="emergency-type" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
+                <option value="Accident / Hit & Run">Accident / Hit & Run</option>
+                <option value="Severe Injury">Severe Injury</option>
+                <option value="Sickness / Disease">Sickness / Disease</option>
+                <option value="Abuse / Cruelty">Abuse / Cruelty</option>
+                <option value="Stray / Trapped">Stray / Trapped</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="form-group">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <label class="form-label" style="margin: 0;">Severity Level</label>
+                <button type="button" id="toggle-rules-btn" style="background: none; border: 1px solid var(--border-card); cursor: pointer; font-size: 0.8rem; color: var(--primary); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; transition: all 0.2s;" title="Click to view Diagnostic Rules">
+                  <span style="font-size: 0.9rem;">❓</span> <span style="font-weight: 500;">Rules Info</span>
+                </button>
+              </div>
+              <select id="severity" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="margin-bottom: 8px; display: block;">Reporter Contact Number</label>
+              <input type="text" id="contact-number" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" placeholder="+91 XXXXX XXXXX" required>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label">Location Address Description</label>
+            <input type="text" id="location-name" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" placeholder="E.g., Near Indiranagar metro station" required>
+          </div>
+
+          <!-- Coordinate Selectors Map integration -->
+          <div class="form-group" style="margin-bottom: 16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+              <label class="form-label" style="margin:0;">Select Pin Location on Map</label>
+              <strong id="location-coords-display" style="font-size:0.85rem; color:var(--primary);">Detecting coordinates...</strong>
+            </div>
+
+            <!-- Address Search Input Box -->
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <input type="text" id="map-address-search" class="form-control" style="flex-grow: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main); font-size: 0.9rem;" placeholder="Search location by address (e.g. Indiranagar, Bangalore)...">
+              <button type="button" id="btn-address-search" class="btn btn-outline btn-sm" style="border-radius: 8px; padding: 8px 16px; font-size: 0.85rem;">Search</button>
+            </div>
+            
+            <div class="map-wrapper" style="height: 300px; margin-bottom: 16px; border-radius: 12px; overflow: hidden; border: 1px solid var(--input-border);">
+              <div id="report-map" style="width: 100%; height: 100%;"></div>
+            </div>
+            
+            <input type="hidden" id="report-lat" required>
+            <input type="hidden" id="report-lng" required>
+          </div>
+
+          <!-- Upload Animal image -->
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label">Upload Animal Image (Optional)</label>
+            <input type="file" id="report-image-input" class="form-control" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" accept="image/*">
+            
+            <!-- Image preview box -->
+            <div id="upload-preview-container" style="display: none; margin-top: 16px;">
+              <div class="scanner-container" style="position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--input-border);">
+                <img id="report-image-preview" class="scanner-image" style="width: 100%; height: auto; max-height: 300px; object-fit: cover;" src="" alt="Scan Preview">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label">Incident Description & Animal Condition</label>
+            <textarea id="description" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" rows="4" placeholder="Briefly describe the animal's condition (e.g., bleeding leg, limping slowly, hit by car...)" required></textarea>
+          </div>
+
+          <button type="submit" id="report-submit-btn" class="btn btn-primary" style="width: 100%; padding: 14px 24px; font-size:1.1rem; margin-top:16px;">
+            Submit Report & Run AI Scan
+          </button>
+        </form>
+      </div>
+
+      <!-- AI Assessment Panel (Initially hidden, revealed on submit) -->
+      <div id="ai-progress-panel" class="glass-card no-lift" style="display: none; margin-top: 24px;">
+        <h2 style="font-size: 1.8rem; margin-bottom: 12px; display:flex; align-items:center; gap:10px;">
+          AI-Assisted Assessment
+          <div class="spinner" style="width:20px; height:20px; border-width:2px;"></div>
+        </h2>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 24px;">Analyzing incident parameters, processing files, and contacting nearest clinics...</p>
+        
+        <div style="font-family: monospace; background-color: rgba(0,0,0,0.03); border: 1px solid var(--border-card); padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+          <p id="ai-status-text" style="color:var(--primary); font-weight:700; margin:0;">Initializing assessment...</p>
+        </div>
+
+        <!-- Progressive Loading Steps List -->
+        <div id="progressive-loading-steps" style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px; border-top: 1px solid var(--border-card); padding-top: 20px;">
+          <div class="step-item" id="step-location" style="display:flex; align-items:center; gap:10px; color:var(--text-muted);">
+            <span id="step-location-icon">⚪</span> <span>Detecting your location...</span>
+          </div>
+          <div class="step-item" id="step-report" style="display:flex; align-items:center; gap:10px; color:var(--text-muted);">
+            <span id="step-report-icon">⚪</span> <span>Submitting emergency report...</span>
+          </div>
+          <div class="step-item" id="step-places" style="display:flex; align-items:center; gap:10px; color:var(--text-muted);">
+            <span id="step-places-icon">⚪</span> <span>Searching nearby veterinary hospitals...</span>
+          </div>
+          <div class="step-item" id="step-haversine" style="display:flex; align-items:center; gap:10px; color:var(--text-muted);">
+            <span id="step-haversine-icon">⚪</span> <span>Calculating nearest hospitals...</span>
+          </div>
+          <div class="step-item" id="step-done" style="display:flex; align-items:center; gap:10px; color:var(--text-muted);">
+            <span id="step-done-icon">⚪</span> <span id="step-done-text">Found veterinary hospitals.</span>
+          </div>
+        </div>
+
+        <!-- Analysis Results list (Initially hidden, revealed on AI compile success) -->
+        <div id="ai-results-grid" style="display: none; margin-top: 20px; border-top: 1px solid var(--border-card); padding-top: 20px;">
+          <h3 style="margin-bottom: 16px; border-bottom: 1px solid var(--border-card); padding-bottom: 8px;">Analysis Metrics</h3>
+          
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:500;">Assigned Priority:</span>
+              <span id="ai-result-severity" class="badge"></span>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:500;">AI Confidence Score:</span>
+              <strong id="ai-result-confidence" style="color:var(--primary);"></strong>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:500;">Injury Detected:</span>
+              <span id="ai-result-injury" style="font-weight: 600;"></span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:500;">Blood Visible:</span>
+              <span id="ai-result-blood" style="font-weight: 600;"></span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:500;">Mobility Impairment:</span>
+              <span id="ai-result-mobility" style="font-weight: 600;"></span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:500;">Distress Rating:</span>
+              <span id="ai-result-distress" style="font-weight: 600;"></span>
+            </div>
+            
+            <div style="border-top:1px solid var(--border-card); padding-top:14px; margin-top:6px;">
+              <span style="font-weight:500; display:block; margin-bottom:4px;">Diagnostic Condition Summary:</span>
+              <p id="ai-result-condition" style="font-size:0.9rem; color:var(--text-muted); line-height: 1.5;"></p>
+            </div>
+          </div>
         </div>
       </div>
-      
+
     </div>
   </main>
+
+  <!-- Diagnostic Rules Modal -->
+  <div id="diagnostic-rules-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="max-width: 500px; width: 100%; background: var(--bg-card-opaque); border: 1px solid var(--border-glass); border-radius: 16px; padding: 28px; box-shadow: var(--shadow-lg); position: relative;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-card); padding-bottom: 12px;">
+        <h3 style="font-size: 1.3rem; color: var(--primary); display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--font-title);">
+          <span>❓</span> Diagnostic Rules Guide
+        </h3>
+        <button type="button" id="close-rules-modal-btn" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); padding: 4px 8px; border-radius: 6px; transition: color 0.2s;" aria-label="Close">✕</button>
+      </div>
+
+      <ul style="display: flex; flex-direction: column; gap: 12px; color: var(--text-main); font-size: 0.95rem; line-height: 1.5; margin-bottom: 24px;">
+        <li style="padding: 10px 12px; background: rgba(239, 68, 68, 0.08); border-left: 4px solid var(--danger); border-radius: 6px;">
+          <strong style="color: var(--danger);">🔴 Critical:</strong> Severe open fractures, heavy blood discharge, or unconscious state. Immediate dispatch triggered.
+        </li>
+        <li style="padding: 10px 12px; background: rgba(249, 115, 22, 0.08); border-left: 4px solid var(--accent); border-radius: 6px;">
+          <strong style="color: var(--accent);">🟠 High:</strong> Noticeable bleeding cuts or severe limping issues. NGO requested within 1 hour.
+        </li>
+        <li style="padding: 10px 12px; background: rgba(245, 158, 11, 0.08); border-left: 4px solid var(--warning); border-radius: 6px;">
+          <strong style="color: var(--warning);">🟡 Medium:</strong> Rashes, sickness, malnutrition or dehydration signs. NGO requested within 24 hours.
+        </li>
+        <li style="padding: 10px 12px; background: rgba(16, 185, 129, 0.08); border-left: 4px solid var(--success); border-radius: 6px;">
+          <strong style="color: var(--success);">🟢 Low:</strong> Found healthy but stranded in observation regions.
+        </li>
+      </ul>
+
+      <button type="button" id="close-rules-modal-bottom-btn" class="btn btn-primary" style="width: 100%; padding: 10px 16px;">Got It</button>
+    </div>
+  </div>
 
   <!-- Footer Section -->
   <footer class="footer">
