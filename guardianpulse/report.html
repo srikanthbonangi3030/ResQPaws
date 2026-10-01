@@ -61,8 +61,8 @@
 
   <!-- Header -->
   <header class="page-header" id="report-page-header">
-    <h1 class="page-title">Report Animal Emergency</h1>
-    <p class="page-subtitle">Submit details of injured, trapped, or sick animals. Our simulated AI system will assess severity and alert nearby NGOs.</p>
+    <h1 class="page-title" data-i18n="reportTitle">Report Animal Emergency</h1>
+    <p class="page-subtitle" data-i18n="reportSubtitle">Submit details of injured, trapped, or sick animals. Our simulated AI system will assess severity and alert nearby NGOs.</p>
   </header>
 
   <!-- Success Screen Panel (Initially Hidden) -->
@@ -98,12 +98,12 @@
       
       <!-- Report Form Card -->
       <div class="glass-card no-lift">
-        <h2 style="font-size: 1.8rem; margin-bottom: 24px;">Incident Details</h2>
+        <h2 style="font-size: 1.8rem; margin-bottom: 24px;" data-i18n="incidentDetailsTitle">Incident Details</h2>
         
         <form id="report-emergency-form">
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div class="form-group">
-              <label class="form-label">Animal Type</label>
+              <label class="form-label" data-i18n="lblAnimalType">Animal Type</label>
               <select id="animal-type" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
                 <option value="Dog">Dog</option>
                 <option value="Cat">Cat</option>
@@ -113,7 +113,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Emergency Type</label>
+              <label class="form-label" data-i18n="lblEmergencyType">Emergency Type</label>
               <select id="emergency-type" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
                 <option value="Accident / Hit & Run">Accident / Hit & Run</option>
                 <option value="Severe Injury">Severe Injury</option>
@@ -128,9 +128,9 @@
           <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div class="form-group">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                <label class="form-label" style="margin: 0;">Severity Level</label>
+                <label class="form-label" style="margin: 0;" data-i18n="lblSeverity">Severity Level</label>
                 <button type="button" id="toggle-rules-btn" style="background: none; border: 1px solid var(--border-card); cursor: pointer; font-size: 0.8rem; color: var(--primary); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; transition: all 0.2s;" title="Click to view Diagnostic Rules">
-                  <span style="font-size: 0.9rem;">❓</span> <span style="font-weight: 500;">Rules Info</span>
+                  <span style="font-size: 0.9rem;">❓</span> <span style="font-weight: 500;" data-i18n="rulesInfoBtn">Rules Info</span>
                 </button>
               </div>
               <select id="severity" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" required>
@@ -141,27 +141,27 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label" style="margin-bottom: 8px; display: block;">Reporter Contact Number</label>
+              <label class="form-label" style="margin-bottom: 8px; display: block;" data-i18n="lblContact">Reporter Contact Number</label>
               <input type="text" id="contact-number" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" placeholder="+91 XXXXX XXXXX" required>
             </div>
           </div>
 
           <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Location Address Description</label>
+            <label class="form-label" data-i18n="lblLocation">Location Address Description</label>
             <input type="text" id="location-name" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" placeholder="E.g., Near Indiranagar metro station" required>
           </div>
 
           <!-- Coordinate Selectors Map integration -->
           <div class="form-group" style="margin-bottom: 16px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-              <label class="form-label" style="margin:0;">Select Pin Location on Map</label>
+              <label class="form-label" style="margin:0;" data-i18n="lblMap">Select Pin Location on Map</label>
               <strong id="location-coords-display" style="font-size:0.85rem; color:var(--primary);">Detecting coordinates...</strong>
             </div>
 
             <!-- Address Search Input Box -->
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
               <input type="text" id="map-address-search" class="form-control" style="flex-grow: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main); font-size: 0.9rem;" placeholder="Search location by address (e.g. Indiranagar, Bangalore)...">
-              <button type="button" id="btn-address-search" class="btn btn-outline btn-sm" style="border-radius: 8px; padding: 8px 16px; font-size: 0.85rem;">Search</button>
+              <button type="button" id="btn-address-search" class="btn btn-outline btn-sm" style="border-radius: 8px; padding: 8px 16px; font-size: 0.85rem;" data-i18n="btnAddressSearch">Search</button>
             </div>
             
             <div class="map-wrapper" style="height: 300px; margin-bottom: 16px; border-radius: 12px; overflow: hidden; border: 1px solid var(--input-border);">
@@ -174,7 +174,7 @@
 
           <!-- Upload Animal image -->
           <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Upload Animal Image (Optional)</label>
+            <label class="form-label" data-i18n="lblUploadImg">Upload Animal Image (Optional)</label>
             <input type="file" id="report-image-input" class="form-control" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" accept="image/*">
             
             <!-- Image preview box -->
@@ -186,11 +186,11 @@
           </div>
 
           <div class="form-group" style="margin-bottom: 16px;">
-            <label class="form-label">Incident Description & Animal Condition</label>
+            <label class="form-label" data-i18n="lblDescription">Incident Description & Animal Condition</label>
             <textarea id="description" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--text-main);" rows="4" placeholder="Briefly describe the animal's condition (e.g., bleeding leg, limping slowly, hit by car...)" required></textarea>
           </div>
 
-          <button type="submit" id="report-submit-btn" class="btn btn-primary" style="width: 100%; padding: 14px 24px; font-size:1.1rem; margin-top:16px;">
+          <button type="submit" id="report-submit-btn" class="btn btn-primary" style="width: 100%; padding: 14px 24px; font-size:1.1rem; margin-top:16px;" data-i18n="btnSubmitReport">
             Submit Report & Run AI Scan
           </button>
         </form>
@@ -279,27 +279,27 @@
       
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-card); padding-bottom: 12px;">
         <h3 style="font-size: 1.3rem; color: var(--primary); display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--font-title);">
-          <span>❓</span> Diagnostic Rules Guide
+          <span>❓</span> <span data-i18n="diagnosticRulesTitle">Diagnostic Rules Guide</span>
         </h3>
         <button type="button" id="close-rules-modal-btn" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); padding: 4px 8px; border-radius: 6px; transition: color 0.2s;" aria-label="Close">✕</button>
       </div>
 
       <ul style="display: flex; flex-direction: column; gap: 12px; color: var(--text-main); font-size: 0.95rem; line-height: 1.5; margin-bottom: 24px;">
         <li style="padding: 10px 12px; background: rgba(239, 68, 68, 0.08); border-left: 4px solid var(--danger); border-radius: 6px;">
-          <strong style="color: var(--danger);">🔴 Critical:</strong> Severe open fractures, heavy blood discharge, or unconscious state. Immediate dispatch triggered.
+          <strong style="color: var(--danger);">🔴 <span data-i18n="ruleCriticalTitle">Critical:</span></strong> <span data-i18n="ruleCriticalDesc">Severe open fractures, heavy blood discharge, or unconscious state. Immediate dispatch triggered.</span>
         </li>
         <li style="padding: 10px 12px; background: rgba(249, 115, 22, 0.08); border-left: 4px solid var(--accent); border-radius: 6px;">
-          <strong style="color: var(--accent);">🟠 High:</strong> Noticeable bleeding cuts or severe limping issues. NGO requested within 1 hour.
+          <strong style="color: var(--accent);">🟠 <span data-i18n="ruleHighTitle">High:</span></strong> <span data-i18n="ruleHighDesc">Noticeable bleeding cuts or severe limping issues. NGO requested within 1 hour.</span>
         </li>
         <li style="padding: 10px 12px; background: rgba(245, 158, 11, 0.08); border-left: 4px solid var(--warning); border-radius: 6px;">
-          <strong style="color: var(--warning);">🟡 Medium:</strong> Rashes, sickness, malnutrition or dehydration signs. NGO requested within 24 hours.
+          <strong style="color: var(--warning);">🟡 <span data-i18n="ruleMediumTitle">Medium:</span></strong> <span data-i18n="ruleMediumDesc">Rashes, sickness, malnutrition or dehydration signs. NGO requested within 24 hours.</span>
         </li>
         <li style="padding: 10px 12px; background: rgba(16, 185, 129, 0.08); border-left: 4px solid var(--success); border-radius: 6px;">
-          <strong style="color: var(--success);">🟢 Low:</strong> Found healthy but stranded in observation regions.
+          <strong style="color: var(--success);">🟢 <span data-i18n="ruleLowTitle">Low:</span></strong> <span data-i18n="ruleLowDesc">Found healthy but stranded in observation regions.</span>
         </li>
       </ul>
 
-      <button type="button" id="close-rules-modal-bottom-btn" class="btn btn-primary" style="width: 100%; padding: 10px 16px;">Got It</button>
+      <button type="button" id="close-rules-modal-bottom-btn" class="btn btn-primary" style="width: 100%; padding: 10px 16px;" data-i18n="btnGotIt">Got It</button>
     </div>
   </div>
 
